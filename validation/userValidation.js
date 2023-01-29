@@ -8,4 +8,12 @@ const createUserSchema = Joi.object({
     role: Joi.string().valid("admin", "resepsionis")
 })
 
-module.exports = {createUserSchema};
+
+const updateUserSchema = Joi.object({
+    username : Joi.string(),
+    email: Joi.string().email(),
+    password : Joi.string().min(4),
+    role: Joi.string().valid("admin","resepsionis")
+})
+
+module.exports = {createUserSchema, updateUserSchema};

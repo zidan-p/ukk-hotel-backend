@@ -1,8 +1,8 @@
 const multer  = require('multer');
 const path = require("path");
 
-const ALLOWED_FILE_TYPE = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
-const MAX_SIZE = 20 * 1024 * 1024; // 20mb
+const ALLOWED_FILE_TYPE_DEFAULT = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+const MAX_SIZE_DEFAULT = 20 * 1024 * 1024; // 20mb
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -14,24 +14,96 @@ const storage = multer.diskStorage({
     }
 });
 
-const fileFilterImage = (req, file, cb) => {
-    if(ALLOWED_FILE_TYPE.includes(file.mimetype)){
+const optionFilesFilter = (allowedFileType) => (req, file, cb) => {
+    if(allowedFileType.includes(file.mimetype)){
         cb(null, true);
     }else{
-        cb(null, false);
+        cb(new Error({name: "validationError", message : "tipe file tidak sesuai"}), false );
     }
 }
-  
 
 
 
-function uploadFile(arrFileName = [],){
-    return multer({ storage: storage, fileFilter: fileFilterImage })
-        .fields(arrFileName.map(arr => {return {name: arr, maxCount: 1}}))
+function uploadFiles(
+    arrFileName = [], 
+    fileOption = {
+        maxSize : MAX_SIZE_DEFAULT, 
+        allowedFileType : ALLOWED_FILE_TYPE_DEFAULT, //mimetype : ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'], default img
+    }
+){
+    const upload = multer({ 
+            storage: storage, 
+            fileFilter: optionFilesFilter(fileOption.allowedFileType),
+            limits:{ fileSize: fileOption.maxSize }
+        })
+        .fields(arrFileName.map(
+            arr => {
+                return {name: arr, maxCount: 1}
+            }
+        ))
+    
+    return (req,res) => upload( req, res , (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({
+                success: false,
+                error : err
+            })
+        } else if (err.name === "validationError") {
+            return res.status(400).json({
+                success: false,
+                error : err
+            })
+        }else{
+            console.log(err)
+            return res.status(500).json({
+                success: false,
+                error: [
+                    {"server" : "server bermasalah"}
+                ]
+            })
+        }
+    })
 }
 
-set
 
-module.exports = {uploadFile}
+function uploadFile(
+    fileName = "",
+    fileOption = {
+        maxSize : MAX_SIZE_DEFAULT, 
+        allowedFileType : ALLOWED_FILE_TYPE_DEFAULT, //mimetype : ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'], default img
+    }
+){
+    
+    const upload =  multer({
+        storage: storage,
+        fileFilter: optionFilesFilter(fileOption.allowedFileType),
+        limits:{ fileSize: fileOption.maxSize }
+    })
+    .single(fileName)
+
+    return (req,res) => upload( req, res , (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({
+                success: false,
+                error : err
+            })
+        } else if (err.name === "validationError") {
+            return res.status(400).json({
+                success: false,
+                error : err
+            })
+        }else{
+            console.log(err)
+            return res.status(500).json({
+                success: false,
+                error: [
+                    {"server" : "server bermasalah"}
+                ]
+            })
+        }
+    })
+}
+
+module.exports = {uploadFile, uploadFiles}
 
 
