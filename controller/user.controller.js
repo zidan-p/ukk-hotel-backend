@@ -161,9 +161,24 @@ const updateUser = async (req,res) => {
 }
 
 
-const deleteUser = async (req.res) => {
-    //cari data yg akan dihapus
-    let {foto} = await User.findByPk(req.param.iid)
+const deleteUser = async (req, res) =>  {
+    try {
+        //cari data yg akan dihapus
+        let user = await User.findByPk(req.param.id)
+        if(user === null) throw new Error({server : "user Tidak Ditemukan"})
+
+        
+
+    } catch (error) {
+        log(error)
+        if(error.server)return res.status(404).json({
+            server : error.server
+        })
+        return res.status(500).json({
+            server : "server bermasalah"
+        })
+    }
+
 }
 
 
