@@ -74,34 +74,31 @@ function uploadFile(
     
     
     return ( req, res, next) => {
-        // console.log("hahahahaha")
-        // const upload =  multer({
-        //     storage: storage,
-        //     fileFilter: optionFilesFilter(fileOption.allowedFileType),
-        //     limits:{ fileSize: fileOption.maxSize }
-        // })
-        // .single(fileName)
+        const upload =  multer({
+            storage: storage,
+            fileFilter: optionFilesFilter(fileOption.allowedFileType),
+            limits:{ fileSize: fileOption.maxSize }
+        })
+        .single(fileName)
 
-        // console.log("awal upload");
-        // upload( req, res , (err) => {
-        //     if (err instanceof multer.MulterError) {
-        //         return res.status(400).json({
-        //             success: false,
-        //             error : err
-        //         })
-        //     }else if(err){
-        //         return res.status(500).json({
-        //             success: false,
-        //             error: [
-        //                 {"server" : "server bermasalah"}
-        //             ]
-        //         })
-        //     }
-        //     console.log("akhir upload")
-        // })
+        upload( req, res , (err) => {
+            if (err instanceof multer.MulterError) {
+                return res.status(400).json({
+                    success: false,
+                    error : err
+                })
+            }else if(err){
+                return res.status(500).json({
+                    success: false,
+                    error: [
+                        {"server" : "server bermasalah"}
+                    ]
+                })
+            }
+            console.log("akhir upload");
+            return next()
+        })
         // return next();
-
-        console.log("anjing banget")
     }
 }
 

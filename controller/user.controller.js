@@ -39,6 +39,11 @@ const endHandler = async (req, res) => {
     }
 }
 
+const firstHandler = async ( req, res, next ) => {
+    req.UKK_BACKEND = {}
+    next();
+}
+
 
 const createUser = async ( req, res, next ) => {
     const data = {
@@ -47,12 +52,12 @@ const createUser = async ( req, res, next ) => {
         password : req.body.password,
         role : req.body.role
     }
-    if(req.files?.foto || req.file?.foto){
-        data.foto = req.files.foto[0].filename
+    if(req.file){
+        data.foto = req.file.filename
     }
     try{
         let result = await User.create(data);
-        req.UKK_BACKEND.createUser ={data : result};
+        req.UKK_BACKEND.createUser = {data : result};
         return next();
     }catch (err) {
         console.error(err);
@@ -193,5 +198,6 @@ module.exports = {
     getAllResepsionis,
     getUser,
     getUserByUsername,
-    updateUser
+    updateUser,
+    firstHandler
 }
