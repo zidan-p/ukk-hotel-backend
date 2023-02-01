@@ -2,9 +2,11 @@ const {ValidationError} = require("joi")
 
 const validation = (schema) => async (req, res, next) => {
     const body = req.body;
+    console.log(req.body);
     try {
+        console.log("mencapai middleware validation");
         await schema.validateAsync(body,{ abortEarly: false });
-        next();
+        return next();
     } catch (error) {
         console.error(error);
         if(error instanceof ValidationError){

@@ -10,16 +10,37 @@ const User = models.User
 function handleServerError(err,res){
     console.error(new Error(`maaf, kami tidak bisa menyimpan ${err.name}`));
     console.error(err);
+    // return res.status(500).json({
+    //     success: false,
+    //     error: [
+    //         {server : "maaf, server bermasalah"}
+    //     ]
+    // })
     return res.status(500).json({
-        success: false,
-        error: [
-            {server : "maaf, server bermasalah"}
-        ]
+        success : false,
+        error : err.message
     })
+
 }
 
 
-const createUser = async (req,res) => {
+const endHandler = async (req, res) => {
+    try {
+        return res.status(200).json({
+            success : true,
+            result : req.UKK_BACKEND
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: "saya tidak tahu apa yg error"
+        })
+    }
+}
+
+
+const createUser = async ( req, res, next ) => {
     const data = {
         username : req.body.username,
         email : req.body.email,
@@ -31,10 +52,8 @@ const createUser = async (req,res) => {
     }
     try{
         let result = await User.create(data);
-        return res.status(200).json({
-            success : true,
-            result : result
-        });
+        req.UKK_BACKEND.createUser ={data : result};
+        return next();
     }catch (err) {
         console.error(err);
         if (err.name === 'SequelizeValidationError') {
@@ -48,34 +67,30 @@ const createUser = async (req,res) => {
     }
 }
 
-const getAllUser = async (req, res) => {
+const getAllUser = async (req, res, next) => {
     try {
         const { count, rows } = await User.findAndCountAll();
-        return res.status(200).json({
-            success: true,
-            result: {
-                data : rows,
-                count : count
-            }
-        })
+        req.UKK_BACKEND.getAllUser = {
+            data : rows,
+            count : count
+        }
+        return next();
     } catch (err) {
         handleServerError(err,res)
     }
 }
 
 
-const getAllAdmin = async (req,res) => {
+const getAllAdmin = async (req, res, next) => {
     try{
         const {count, rows} = await User.findAndCountAll({
             where: {role: "admin"}
         })
-        return res.status(200).json({
-            success : true,
-            result: {
-                data: rows,
-                count : count
-            }
-        })
+        req.UKK_BACKEND.getAllUser = {
+            data: rows,
+            count : count
+        }
+        return next()
     }catch(err){
         handleServerError(err,res)
     }
@@ -83,16 +98,15 @@ const getAllAdmin = async (req,res) => {
 
 const getAllResepsionis = async (req,res) => {
     try{
-        const {count, rows} = await User.findAndCountAll({
+        const {count, rows} = 
+        await User.findAndCountAll({
             where: {role: "resepsionis"}
         })
-        return res.status(200).json({
-            success : true,
-            result: {
-                data: rows,
-                count : count
-            }
-        })
+        req.UKK_BACKEND.getAllResepsionis = {
+            data: rows,
+            count : count
+        }
+        return next();
     }catch(err){
         handleServerError(err,res)
     }
@@ -104,12 +118,9 @@ const getUser = async (req,res) => {
         const result = await User.findOne({
             where: {id: req.params.id}
         })
-        return res.status(200).json({
-            success : true,
-            result: {
-                data : result,
-            }
-        })
+        if (result === null) throw new Error("user tidak ditemukan")
+        req.UKK_BACKEND.getUser = {data : result}
+        return next();
     } catch (error) {
         handleServerError(err,res);
     }
@@ -121,12 +132,8 @@ const getUserByUsername = async (req,res) => {
         const result = await User.findOne({
             where: {username : req.params.username}
         })
-        return res.status(200).json({
-            success : true,
-            result : {
-                data : result
-            }
-        })
+        if (result === null) throw new Error("user tidak ditemukan")
+        req.UKK_BACKEND.getUserByUsername = {data : result}
     } catch (err) {
         handleServerError(err,res);
     }
@@ -149,12 +156,8 @@ const updateUser = async (req,res) => {
         let result = await User.update(data, {
             where: {id : req.params.id}
         })
-        return res.status(200).json({
-            success : true,
-            result : {
-                data : result
-            }
-        })
+        req.UKK_BACKEND.updateUser = {data : result}
+        return next();
     } catch (err) {
         handleServerError(err,res)
     }
@@ -163,22 +166,15 @@ const updateUser = async (req,res) => {
 
 const deleteUser = async (req, res) =>  {
     try {
-        //cari data yg akan dihapus
-        let user = await User.findByPk(req.param.id)
-        if(user === null) throw new Error({server : "user Tidak Ditemukan"})
-
-        
-
+        await User.destroy({where : {id : req.params.id}});
+        await fs.unlink(path.resolve("storage", "images", req.getUser.foto));
+        req.UKK_BACKEND.deleteUser = {
+            data : null
+        }
+        return next()
     } catch (error) {
-        log(error)
-        if(error.server)return res.status(404).json({
-            server : error.server
-        })
-        return res.status(500).json({
-            server : "server bermasalah"
-        })
+        handleServerError(err,res)
     }
-
 }
 
 
@@ -189,6 +185,8 @@ const deleteUser = async (req, res) =>  {
 
 
 module.exports = {
+    endHandler,
+    deleteUser,
     createUser, 
     getAllUser, 
     getAllAdmin, 

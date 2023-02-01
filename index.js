@@ -3,12 +3,13 @@ const route = require("./routes/route");
 
 const express = require('express')
 const app = express()
-const port = 3000
+const port = 3005
 
 app.use(route);
 
 async function assertDatabaseConnectionOk() {
 	console.log(`Checking database connection...`);
+	console.log(`seharusnya pesanay berbeda`);
 	try {
 		await sequelize.authenticate();
 		console.log('Database connection OK!');
@@ -22,10 +23,10 @@ async function assertDatabaseConnectionOk() {
 assertDatabaseConnectionOk();
 
 app.listen(port, () => {
-	console.log("app listening on port" + port);
+	console.log("app listening on port : " + port);
 })
 
 app.on('error', (e) => {
-	console.error("ada yang bermasalah");v 
+	console.error("ada yang bermasalah");
 	console.log(e.message)
 })

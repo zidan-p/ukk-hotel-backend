@@ -15,10 +15,12 @@ const storage = multer.diskStorage({
 });
 
 const optionFilesFilter = (allowedFileType) => (req, file, cb) => {
+    if (!file) return cb(null,true)
     if(allowedFileType.includes(file.mimetype)){
         cb(null, true);
     }else{
-        cb(new Error({name: "validationError", message : "tipe file tidak sesuai"}), false );
+        // cb(new Error({name: "validationError", message : "tipe file tidak sesuai"}), false );
+        cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file.fieldname), false );
     }
 }
 
@@ -43,17 +45,13 @@ function uploadFiles(
         ))
     
     return (req,res) => upload( req, res , (err) => {
+        console.log(err);
         if (err instanceof multer.MulterError) {
             return res.status(400).json({
                 success: false,
                 error : err
             })
-        } else if (err.name === "validationError") {
-            return res.status(400).json({
-                success: false,
-                error : err
-            })
-        }else{
+        }else if(err){ 
             console.log(err)
             return res.status(500).json({
                 success: false,
@@ -74,34 +72,37 @@ function uploadFile(
     }
 ){
     
-    const upload =  multer({
-        storage: storage,
-        fileFilter: optionFilesFilter(fileOption.allowedFileType),
-        limits:{ fileSize: fileOption.maxSize }
-    })
-    .single(fileName)
+    
+    return ( req, res, next) => {
+        // console.log("hahahahaha")
+        // const upload =  multer({
+        //     storage: storage,
+        //     fileFilter: optionFilesFilter(fileOption.allowedFileType),
+        //     limits:{ fileSize: fileOption.maxSize }
+        // })
+        // .single(fileName)
 
-    return (req,res) => upload( req, res , (err) => {
-        if (err instanceof multer.MulterError) {
-            return res.status(400).json({
-                success: false,
-                error : err
-            })
-        } else if (err.name === "validationError") {
-            return res.status(400).json({
-                success: false,
-                error : err
-            })
-        }else{
-            console.log(err)
-            return res.status(500).json({
-                success: false,
-                error: [
-                    {"server" : "server bermasalah"}
-                ]
-            })
-        }
-    })
+        // console.log("awal upload");
+        // upload( req, res , (err) => {
+        //     if (err instanceof multer.MulterError) {
+        //         return res.status(400).json({
+        //             success: false,
+        //             error : err
+        //         })
+        //     }else if(err){
+        //         return res.status(500).json({
+        //             success: false,
+        //             error: [
+        //                 {"server" : "server bermasalah"}
+        //             ]
+        //         })
+        //     }
+        //     console.log("akhir upload")
+        // })
+        // return next();
+
+        console.log("anjing banget")
+    }
 }
 
 module.exports = {uploadFile, uploadFiles}
