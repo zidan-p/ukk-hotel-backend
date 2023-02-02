@@ -9,7 +9,6 @@ app.use(route);
 
 async function assertDatabaseConnectionOk() {
 	console.log(`Checking database connection...`);
-	console.log(`seharusnya pesanay berbeda`);
 	try {
 		await sequelize.authenticate();
 		console.log('Database connection OK!');
@@ -24,6 +23,7 @@ assertDatabaseConnectionOk();
 
 app.listen(port, () => {
 	console.log("app listening on port : " + port);
+	console.log("http://localhost:" + port);
 })
 
 app.on('error', (e) => {

@@ -2,7 +2,6 @@ const sequelize = require("./../database");
 const handleSequelizeError = require("./../database/handleError");
 const fs = require("fs/promises")
 const path = require("path");
-
 const models = sequelize.models;
 const User = models.User
 
@@ -10,17 +9,22 @@ const User = models.User
 function handleServerError(err,res){
     console.error(new Error(`maaf, kami tidak bisa menyimpan ${err.name}`));
     console.error(err);
-    // return res.status(500).json({
-    //     success: false,
-    //     error: [
-    //         {server : "maaf, server bermasalah"}
-    //     ]
-    // })
     return res.status(500).json({
         success : false,
         error : err.message
     })
 
+}
+
+
+async function deleteFileIfExist(path){
+    try {
+        await fs.access(fotoPath)
+        fs.unlink(path);
+    } catch (error) {
+        console.error("error untuk admin")
+        console.error(error);
+    }
 }
 
 
@@ -91,7 +95,7 @@ const getAllAdmin = async (req, res, next) => {
         const {count, rows} = await User.findAndCountAll({
             where: {role: "admin"}
         })
-        req.UKK_BACKEND.getAllUser = {
+        req.UKK_BACKEND.getAllAdmin = {
             data: rows,
             count : count
         }
@@ -101,7 +105,7 @@ const getAllAdmin = async (req, res, next) => {
     }
 }
 
-const getAllResepsionis = async (req,res) => {
+const getAllResepsionis = async ( req, res, next ) => {
     try{
         const {count, rows} = 
         await User.findAndCountAll({
@@ -118,7 +122,7 @@ const getAllResepsionis = async (req,res) => {
 }
 
 
-const getUser = async (req,res) => {
+const getUser = async ( req, res, next ) => {
     try {
         const result = await User.findOne({
             where: {id: req.params.id}
@@ -126,41 +130,42 @@ const getUser = async (req,res) => {
         if (result === null) throw new Error("user tidak ditemukan")
         req.UKK_BACKEND.getUser = {data : result}
         return next();
-    } catch (error) {
-        handleServerError(err,res);
-    }
-}
-
-
-const getUserByUsername = async (req,res) => {
-    try {
-        const result = await User.findOne({
-            where: {username : req.params.username}
-        })
-        if (result === null) throw new Error("user tidak ditemukan")
-        req.UKK_BACKEND.getUserByUsername = {data : result}
     } catch (err) {
         handleServerError(err,res);
     }
 }
 
 
-const updateUser = async (req,res) => {
+const getUserByUsername = async ( req, res, next ) => {
+    try {
+        const result = await User.findOne({
+            where: {username : req.params.username}
+        })
+        if (result === null) throw new Error("user tidak ditemukan")
+        req.UKK_BACKEND.getUserByUsername = {data : result}
+        return next()
+    } catch (err) {
+        handleServerError(err,res);
+    }
+}
+
+
+const updateUser = async ( req, res, next ) => {
     const data = {
         username : req.body.username,
         email : req.body.email,
         password : req.body.password,
         role : req.body.role
     }
-    if(req.files?.foto || req.file?.foto){
-        data.foto = req.files.foto[0].filename;
-        await fs.unlink(path.resolve("storage", "images", data.foto));
+    if(req.file){
+        data.foto = req.file.filename;
     }
-
+    let oldFoto = req.UKK_BACKEND.getUser.foto;
     try {
         let result = await User.update(data, {
             where: {id : req.params.id}
         })
+        if(req.file && oldFoto) await deleteFileIfExist(path.resolve("storage", "images", oldFoto))
         req.UKK_BACKEND.updateUser = {data : result}
         return next();
     } catch (err) {
@@ -169,15 +174,18 @@ const updateUser = async (req,res) => {
 }
 
 
-const deleteUser = async (req, res) =>  {
+const deleteUser = async ( req, res, next) =>  {
     try {
         await User.destroy({where : {id : req.params.id}});
-        await fs.unlink(path.resolve("storage", "images", req.getUser.foto));
+        const fotoPath = path.resolve("storage", "images", req.UKK_BACKEND.getUser.data.foto)
+        deleteFileIfExist(fotoPath);
+        delete req.UKK_BACKEND.getUser
         req.UKK_BACKEND.deleteUser = {
             data : null
         }
         return next()
-    } catch (error) {
+    } catch (err) {
+        console.log(err);
         handleServerError(err,res)
     }
 }

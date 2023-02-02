@@ -17,13 +17,6 @@ const Route = require("express").Router();
 
 // GET
 Route.get(
-    "/",
-    userController.firstHandler, 
-    userController.getAllUser,
-    userController.endHandler
-);
-
-Route.get(
     "/role/admin",
     userController.firstHandler,
     userController.getAllAdmin,
@@ -51,6 +44,13 @@ Route.get(
     userController.endHandler
 );
 
+Route.get(
+    "/",
+    userController.firstHandler, 
+    userController.getAllUser,
+    userController.endHandler
+);
+
 
 
 // POST
@@ -68,8 +68,10 @@ Route.put(
     "/:id",
     userController.firstHandler, 
     uploadFile("foto"), 
-    validation(validationSchema.updateUserSchema), 
-    userController.updateUser
+    validation(validationSchema.updateUserSchema),
+    userController.getUser,
+    userController.updateUser,
+    userController.endHandler
 );
 
 // DElETE
@@ -77,7 +79,8 @@ Route.delete(
     "/:id",
     userController.firstHandler,
     userController.getUser,
-    userController.deleteUser
+    userController.deleteUser,
+    userController.endHandler
 )
 
 
