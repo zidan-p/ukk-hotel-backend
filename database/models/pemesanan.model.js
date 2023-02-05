@@ -1,35 +1,43 @@
 const { DataTypes } = require('sequelize');
-
+const {format} = require("date-fns")
+const {generateRandomString} = require("./../../utils/randomString");
 
 module.exports = (sequelize) => {
 	sequelize.define('Pemesanan', {
-        nomor_pemesanan     : {
+        nomorPemesanan     : {
             allowNull       : false,
-            type            : DataTypes.UUID
+            type            : DataTypes.UUID,
+            primaryKey      : true,
+            set(){
+                const date = format(new Date(), "YYYYMMLL-");
+                const str = generateRandomString(5);
+                this.setDataValue("nomor_pemesanan", date + str)
+            }
         },
-        nama_pemesan        : {
+        namaPemesan        : {
             allowNull       : false,
             type            : DataTypes.STRING
         },
-        email_pemesan       : {
+        emailPemesan       : {
             allowNull       : false,
             type            : DataTypes.STRING
         },
-        tgl_pemesanan       : {
+        tglPemesanan       : {
             allowNull       : false,
             type            : DataTypes.TIME
         },
-        tgl_check_in        : {
+        tglCheckIn        : {
             allowNull       : false,
             type            : DataTypes.TIME
         },
-        tgl_check_out       : {
+        tglCheckOut       : {
             allowNull       : false,
             type            : DataTypes.TIME
         },
         status              :{
             type            : DataTypes.ENUM(
                 "baru",
+                "diterima",
                 "check_in", 
                 "check_out"
             ),

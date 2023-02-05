@@ -18,69 +18,53 @@ const Route = require("express").Router();
 // GET
 Route.get(
     "/role/admin",
-    userController.firstHandler,
     userController.getAllAdmin,
-    userController.endHandler
 );
 
 Route.get(
     "/role/resepsionis",
-    userController.firstHandler,
     userController.getAllResepsionis,
-    userController.endHandler
 );
 
 Route.get(
     "/username/:username",
-    userController.firstHandler,
     userController.getUserByUsername,
-    userController.endHandler
 );
 
 Route.get(
-    "/:id",
-    userController.firstHandler,
+    "/:user_id",
     userController.getUser,
-    userController.endHandler
 );
 
 Route.get(
-    "/",
-    userController.firstHandler, 
+    "/", 
     userController.getAllUser,
-    userController.endHandler
 );
 
 
 
 // POST
 Route.post(
-    "/",
-    userController.firstHandler,                    //initial request value
+    "/",                                
     uploadFile("foto"),                             //upload file
     validation(validationSchema.createUserSchema),  //validate
-    userController.createUser,                      //add to database
-    userController.endHandler                       //handle output
+    userController.createUser,                      //add to database                       
 );
 
 // PUT
 Route.put(
-    "/:id",
-    userController.firstHandler, 
+    "/:id", 
     uploadFile("foto"), 
     validation(validationSchema.updateUserSchema),
     userController.getUser,
     userController.updateUser,
-    userController.endHandler
 );
 
 // DElETE
 Route.delete(
     "/:id",
-    userController.firstHandler,
     userController.getUser,
     userController.deleteUser,
-    userController.endHandler
 )
 
 

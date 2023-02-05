@@ -26,8 +26,18 @@ function applyRelation(sequelize){
     DetailPemesanan.belongsTo(Pemesanan);
 
     // -- detail pemesanan dengan kamar --
-    DetailPemesanan.belongsToMany(Kamar, {through:'kamar_pemesanan'});
-    Kamar.belongsToMany(DetailPemesanan, {through:'kamar_pemesanan'});
+    DetailPemesanan.belongsToMany(Kamar, {
+        through:'kamar_pemesanan_junction',
+        as : "daftarKamar"
+    });
+    Kamar.belongsToMany(DetailPemesanan, {
+        through:'kamar_pemesanan_junction',
+        as : "daftarDetailPemesanan"
+    });
+
+    // -- detail pemesanan dengan tipe kamar 
+    DetailPemesanan.belongsTo(TipeKamar);
+    TipeKamar.hasMany(DetailPemesanan);
 }
 
 

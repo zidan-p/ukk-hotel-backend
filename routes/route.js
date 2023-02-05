@@ -12,12 +12,14 @@ app.use(cors())
 // app.use(multer().any()); //cara kasar untuk menghandle form data, harap dihindari
 
 
+//middleware
+const {endHandler, firstHandler} = require("./../middleware/dataHandler");
+
 //import route
 const userRouter = require("./user.route");
 
-
 //Route
-app.use("/user", userRouter);
+app.use("/user", firstHandler, userRouter, endHandler);
 
 
 
