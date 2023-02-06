@@ -4,13 +4,15 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
 	sequelize.define('TipeKamar', {
         namaTipeKamar : {
-            allowNull   : false,
+            allowNull   : true,
             type        : DataTypes.STRING,
-            validate    : {
-                notEmpty: {
-                    msg : "harap sediakan nama tipe kamar"
-                }
-            }
+            // -- saya tidak tahu mengapa ini begini --
+            // validate    : {
+            //     notEmpty: {
+            //         msg : "harap sediakan nama tipe kamar"
+            //     }
+            // },
+            defaultValue: "Kamar Hotel"
         },
         harga           : {
             allowNull   : true,

@@ -17,10 +17,11 @@ const {endHandler, firstHandler} = require("./../middleware/dataHandler");
 
 //import route
 const userRouter = require("./user.route");
+const tipeKamarRouter = require("./tipeKamar.route");
 
 //Route
 app.use("/user", firstHandler, userRouter, endHandler);
-
+app.use("/tipe-kamar", firstHandler, tipeKamarRouter, endHandler);
 
 
 

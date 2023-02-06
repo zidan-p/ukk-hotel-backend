@@ -13,27 +13,6 @@ const {
 } = require("./../feature/handleError");
 
 
-const endHandler = async (req, res) => {
-    try {
-        return res.status(200).json({
-            success : true,
-            result : req.UKK_BACKEND
-        })
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            error: "saya tidak tahu apa yg error"
-        })
-    }
-}
-
-const firstHandler = async ( req, res, next ) => {
-    req.UKK_BACKEND = {}
-    next();
-}
-
-
 const createUser = async ( req, res, next ) => {
     const data = {
         username : req.body.username,
@@ -174,7 +153,6 @@ const deleteUser = async ( req, res, next) =>  {
 
 
 module.exports = {
-    endHandler,
     deleteUser,
     createUser, 
     getAllUser, 
@@ -183,5 +161,4 @@ module.exports = {
     getUser,
     getUserByUsername,
     updateUser,
-    firstHandler
 }

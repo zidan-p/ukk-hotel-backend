@@ -1,5 +1,4 @@
 const sequelize = require("./../database");
-const handleSequelizeError = require("./../database/handleError");
 const models = sequelize.models;
 const TipeKamar = models.TipeKamar
 const Kamar = models.Kamar
@@ -18,13 +17,12 @@ const {
 
 // ---------------- controller ---------------
 const createTipeKamar = async ( req, res, next ) =>{
+    // return console.log(req.body)
     const data = {
-        namaTipekamar : req.body.namaTipekamar,
-        harga : req.body.harga,
+        namaTipeKamar : req.body.namaTipekamar,
+        harga : +req.body.harga,
         deskripsi : req.body.deskripsi,
     }
-
-    if(req.body.namaTipekamar === "") data.namaTipekamar = "Kamar Hotel";
 
     if(req.file){
         data.foto = req.file.filename
@@ -56,17 +54,22 @@ const getAllTipeKamar = async ( req, res, next ) => {
 
 // jaga2 error
 const getTipeKamar = async (req,res,next) => {
+    console.log(req.params.tipe_kamar_id);
     try {
         const result = await TipeKamar.findOne({
-            where : {id : req.params.id},
-            attributes: {
-                include : [sequelize.fn("Count", "kamar.id"), "kamarCount"]
-            },
-            include : [{
-                model : Kamar,
-            }]
+            // subQuery : false,
+            where : {id : req.params.tipe_kamar_id}
+            // attributes: {
+            //     // include : [await [this.countKamars(), "kamarCount"]]
+            //     include : [[sequelize.fn("Count", sequelize.col("kamar.TipeKamarId")), "kamarCount"]]
+            // },
+            // include : [{
+            //     model : Kamar,
+            //     attributes: []
+            // }],
+            // group:["kamar.TipeKamarId"]
         })
-        req.UKK_BACKEND.getTipeKamarSimple = {data :result}
+        req.UKK_BACKEND.getTipeKamar = {data :result}
         return next();
     } catch (error) {
         handleServerError(res,error)
@@ -91,15 +94,18 @@ const getTipeKamarFull = async (req,res,next) => {
 
 
 const updateTipeKamar = async (req,res,next) => {
+    const data = {
+        namaTipekamar : req.body.namaTipekamar,
+        harga : req.body.harga,
+        deskripsi : req.body.deskripsi,
+    }
+    if(req.file)data.foto = req.file.filename; // ini foto yag belumd i format
+    let oldFoto = getFilePath(req.UKK_BACKEND.getTipeKamar.data.foto); //ini sudah diformat dan akan di resolve
     try {
-        const data = {
-            namaTipekamar : req.body.namaTipekamar,
-            harga : req.body.harga,
-            deskripsi : req.body.deskripsi,
-        }
         let result = await TipeKamar.update(data, {
             where : {id : req.params.id}
         })
+        if(req.file && oldFoto) await deleteFileIfExist(oldFoto)
         req.UKK_BACKEND.updateTipeKamar = {data : result}
         return next();
     } catch (error) {
@@ -128,9 +134,6 @@ const deleteTipeKamar = async (req,res,next) => {
 
 
 module.exports = {
-    firstHandler,
-    endHandler,
-
     createTipeKamar,
     getAllTipeKamar,
     getTipeKamar,

@@ -1,6 +1,6 @@
 
 
-function parseSequelizeError(err) {
+function parseSequelizeError1(err) {
     const errors = err.errors
     const errorList = errors.map(e => {
         let obj = {}
@@ -11,6 +11,16 @@ function parseSequelizeError(err) {
     return errorList.map(e => e.message)
 }
 
+function parseSequelizeError(err){
+    const errors = err.errors
+    const errorList = errors.map(e => {
+        let obj = {}
+        obj[e.path] = e.message
+        return obj;
+    })
+
+    return errorList
+}
 
 function parseJoiError(error){
     return error.details.map(err =>{
@@ -19,19 +29,21 @@ function parseJoiError(error){
 }
 
 function handleServerError(res,error){
-    console.error(new Error(`maaf, kami tidak bisa menyimpan ${err.name}`));
-    console.error(err);
+    console.error(new Error(`maaf, kami tidak bisa menyimpan ${error.name}`));
+    console.error(error);
     return res.status(500).json({
         success : false,
-        error : err.message
+        error : error.message
     })
 }
 
 function handleSequelizeError(res,error){
-    if (err.name === 'SequelizeValidationError') {
+    console.log(error)
+    if (error.name === 'SequelizeValidationError') {
         return res.status(400).json({
         success: false,
-        error: parseSequelizeError(error)
+        // error: parseSequelizeError(error)
+        error: error
         })
     } 
 }

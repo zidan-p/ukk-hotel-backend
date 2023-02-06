@@ -54,7 +54,7 @@ Route.post(
 // PUT
 Route.put(
     "/:id", 
-    uploadFile("foto"), 
+    uploadFile("foto"),
     validation(validationSchema.updateUserSchema),
     userController.getUser,
     userController.updateUser,

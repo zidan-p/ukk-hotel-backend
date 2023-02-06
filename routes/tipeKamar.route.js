@@ -27,7 +27,7 @@ Route.get(
 )
 
 
-//POST
+//POST V
 Route.post(
     "/",
     uploadFile("foto"),
@@ -47,3 +47,7 @@ Route.delete(
     "/:tipe_kamar_id",
     tipeKamarController.deleteTipeKamar
 )
+
+
+
+module.exports = Route
