@@ -35,7 +35,7 @@ Route.delete(
     detailPemesananController.deleteDetailPemesanan
 )
 
-
+module.exports = Route
 
 
 

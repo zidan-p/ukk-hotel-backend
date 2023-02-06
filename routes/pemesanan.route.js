@@ -51,3 +51,4 @@ Route.delete(
     pemesananController.deletePemesanan
 )
 
+module.exports = Route

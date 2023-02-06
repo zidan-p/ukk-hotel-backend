@@ -6,8 +6,7 @@ module.exports = (sequelize) => {
 	sequelize.define('Pemesanan', {
         nomorPemesanan     : {
             allowNull       : false,
-            type            : DataTypes.UUID,
-            primaryKey      : true,
+            type            : DataTypes.STRING,
             set(){
                 const date = format(new Date(), "YYYYMMLL-");
                 const str = generateRandomString(5);

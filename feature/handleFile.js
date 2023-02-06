@@ -13,8 +13,10 @@ async function deleteFileIfExist(filepath){
     // }
 
     if(fs.existsSync(filepath)){
-        fs.unlink(filepath)
-        console.log("file sudah dihapus")
+        fs.unlink(filepath, (err) => {
+            if(err) throw err
+            console.log("file sudah dihapus")
+        })
     }else{
         console.log("file tidak tersedia")
     }

@@ -16,7 +16,7 @@ const {
 const createKamarOne = async (req,res,next) => {
     const data = {
         nama : req.body.nama,
-        tipeKamarId : req.body.tipeKamarId // ini mungkin harus diubah
+        TipeKamarId : req.params.tipe_kamar_id // ini mungkin harus diubah
     }
     try {
         const result = await Kamar.create(data);
@@ -29,16 +29,45 @@ const createKamarOne = async (req,res,next) => {
 }
 
 const createKamarMany = async (req, res, next) => {
+    const nama = req.body.nama
+    const TipeKamarId = req.params.tipe_kamar_id
+    const count = +req.body.count
+    
+    const data = [];
+    for(let i = 0; i < count; i++){
+        data[i] = {
+            nama : nama,
+            TipeKamarId
+        }
+    }
+
+    try {
+        const result = await Kamar.bulkCreate(data, {validate: true});
+        req.UKK_BACKEND.createkamarMany = {
+            data : result,
+            count : count
+        }
+        return next();
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error)       
+    }
+
+}
+const createKamarBulk = async (req, res, next) => {
     const namaList = req.body.namaList
-    const tipeKamarId = req.body.tipeKamarId
+    const TipeKamarId = req.params.tipe_kamar_id
     
     const data = namaList.map(nama => {
-        return {nama: nama, tipeKamarId : tipeKamarId}
+        return {nama: nama, TipeKamarId}
     })
 
     try {
         const result = await Kamar.bulkCreate(data, {validate: true});
-        req.UKK_BACKEND.createkamarMany = {data : result}
+        req.UKK_BACKEND.createkamarBulk = {
+            data : result,
+            count : namaList.length
+        }
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
@@ -154,5 +183,6 @@ module.exports = {
     getKamarByTipeKamarId,
     getSomeKamarByIdList,
     updateKamar,
-    deleteKamar
+    deleteKamar,
+    createKamarBulk
 }

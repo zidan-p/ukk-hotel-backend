@@ -57,17 +57,7 @@ const getTipeKamar = async (req,res,next) => {
     console.log(req.params.tipe_kamar_id);
     try {
         const result = await TipeKamar.findOne({
-            // subQuery : false,
             where : {id : req.params.tipe_kamar_id}
-            // attributes: {
-            //     // include : [await [this.countKamars(), "kamarCount"]]
-            //     include : [[sequelize.fn("Count", sequelize.col("kamar.TipeKamarId")), "kamarCount"]]
-            // },
-            // include : [{
-            //     model : Kamar,
-            //     attributes: []
-            // }],
-            // group:["kamar.TipeKamarId"]
         })
         req.UKK_BACKEND.getTipeKamar = {data :result}
         return next();
@@ -101,9 +91,11 @@ const updateTipeKamar = async (req,res,next) => {
     }
     if(req.file)data.foto = req.file.filename; // ini foto yag belumd i format
     let oldFoto = getFilePath(req.UKK_BACKEND.getTipeKamar.data.foto); //ini sudah diformat dan akan di resolve
+    console.log(oldFoto);
+    console.log(data.foto);
     try {
         let result = await TipeKamar.update(data, {
-            where : {id : req.params.id}
+            where : {id : req.params.tipe_kamar_id}
         })
         if(req.file && oldFoto) await deleteFileIfExist(oldFoto)
         req.UKK_BACKEND.updateTipeKamar = {data : result}
@@ -117,7 +109,7 @@ const updateTipeKamar = async (req,res,next) => {
 
 const deleteTipeKamar = async (req,res,next) => {
     try {
-        TipeKamar.destroy({where: {id : req.params.id}})
+        TipeKamar.destroy({where: {id : req.params.tipe_kamar_id}})
         delete req.UKK_BACKEND.getTipeKamar;
         req.UKK_BACKEND.deleteTipekamar = {
             data : null
