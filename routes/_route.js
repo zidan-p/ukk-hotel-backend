@@ -15,19 +15,21 @@ app.use(cors())
 //middleware
 const {endHandler, firstHandler} = require("../middleware/dataHandler");
 
-//import route
+// //import route
 const userRouter = require("./user.route");
 const tipeKamarRouter = require("./tipeKamar.route");
 const kamarRouter = require("./kamar.route");
 const pemesananRouter = require("./pemesanan.route");
 const detailPemesananRouter = require("./detailPemesanan.route");
+const authenticationController = require("./login.route");
 
-//Route
+// // Route
 app.use("/user", firstHandler, userRouter, endHandler);
 app.use("/tipe-kamar", firstHandler, tipeKamarRouter, endHandler);
 app.use("/kamar", firstHandler, kamarRouter, endHandler );
 app.use("/pemesanan", firstHandler, pemesananRouter, endHandler);
 app.use("/detail-pemesanan", firstHandler, detailPemesananRouter, endHandler);
+app.use("/", firstHandler, authenticationController, endHandler);
 
 
 

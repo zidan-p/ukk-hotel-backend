@@ -5,70 +5,83 @@
 const kamarController = require("./../controller/kamar.controller");
 const {getTipeKamar} = require("./../controller/tipeKamar.controller")
 
+//data handler
+const dataHandler = require("./../middleware/dataHandler")
+
 //ROuter
 const Route = require("express").Router()
 
 // GET
+
 Route.get(
-    "/",
-    kamarController.getAllkamar
+    "/tipe-kamar/:tipe_kamar_id",
+    getTipeKamar,
+    kamarController.getKamarByTipeKamarId,
+    dataHandler.endHandler
 )
 
 Route.get(
     "/:kamar_id",
-    kamarController.getKamar
+    kamarController.getKamarFull,
+    dataHandler.endHandler
 )
-
+    
 Route.get(
-    "/tipe-kamar/:tipe_kamar_id",
-    kamarController.getKamarByTipeKamarId
+    "/",
+    kamarController.getAllkamar,
+    dataHandler.endHandler
 )
-
 
 // POST
 
 Route.post(
     "/create-many-with-tipe-kamar/:tipe_kamar_id",
+    authController.authRole(["admin","resepsionis"]),
     getTipeKamar,
-    kamarController.createKamarMany
+    kamarController.createKamarMany,
+    dataHandler.endHandler
 )
 
 Route.post(
     "/search",
-    kamarController.getSomeKamarByIdList
+    kamarController.findSomeKamarByIdList,
+    dataHandler.endHandler
 )
 
 
 Route.post(
     "/create-one-with-tipe-kamar/:tipe_kamar_id",
+    authController.authRole(["admin","resepsionis"]),
     getTipeKamar,
-    kamarController.createKamarOne
+    kamarController.createKamarOne,
+    dataHandler.endHandler
 )
 Route.post(
     "/create-bulk-with-tipe-kamar/:tipe_kamar_id",
+    authController.authRole(["admin","resepsionis"]),
     getTipeKamar,
-    kamarController.createKamarBulk
+    kamarController.createKamarBulk,
+    dataHandler.endHandler
 )
-
-//not safe
-//tidak bisa karena setiap kamar perlu relasi dengan tipe kamar
-// Route.post(
-//     "/",
-//     kamarController.createKamarOne
-// )
 
 
 //PUT
 Route.put(
-    ":/kamar_id",
-    kamarController.updateKamar
+    "/:kamar_id",
+    authController.authRole(["admin","resepsionis"]),
+    kamarController.getKamar,
+    kamarController.updateKamar,
+    dataHandler.endHandler
 )
 
 
 //DELETE
 Route.delete(
-    "/kamar_id",
-    kamarController.deleteKamar
+    "/:kamar_id",
+    authController.authRole(["admin","resepsionis"]),
+    kamarController.getKamar,
+    kamarController.deleteKamar,
+    dataHandler.endHandler
 )
 
 

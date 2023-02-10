@@ -30,7 +30,7 @@ const createTipeKamar = async ( req, res, next ) =>{
 
     try {
         let result = await TipeKamar.create(data)
-        req.UKK_BACKEND.createTipeKamar = {data : result}
+        req.UKK_BACKEND.tipeKamarOne = {data : result}
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
@@ -42,7 +42,7 @@ const createTipeKamar = async ( req, res, next ) =>{
 const getAllTipeKamar = async ( req, res, next ) => {
     try {
         const {count, rows} = await TipeKamar.findAndCountAll();
-        req.UKK_BACKEND.getAllTipeKamar = {
+        req.UKK_BACKEND.getTipeKamarList = {
             count : count,
             data : rows
         }
@@ -56,10 +56,11 @@ const getAllTipeKamar = async ( req, res, next ) => {
 const getTipeKamar = async (req,res,next) => {
     console.log(req.params.tipe_kamar_id);
     try {
-        const result = await TipeKamar.findOne({
+        const result = await TipeKamar.findOne({ 
             where : {id : req.params.tipe_kamar_id}
         })
-        req.UKK_BACKEND.getTipeKamar = {data :result}
+        if(result === null) throw new Error("tipe kamar tidak ditemukan")
+        req.UKK_BACKEND.getTipeKamarOne = {data :result}
         return next();
     } catch (error) {
         handleServerError(res,error)
@@ -75,8 +76,23 @@ const getTipeKamarFull = async (req,res,next) => {
                 model : Kamar,
             }]
         })
-        req.UKK_BACKEND.getTipeKamarSimple = {data :result}
+        req.UKK_BACKEND.getTipeKamarOne = {data :result}
         return next();
+    } catch (error) {
+        handleServerError(res,error)
+    }
+}
+
+
+const findTipeKamar = async (req,res,next) => {
+    const id = req.body.TipeKamarId
+    try {
+        const result = await TipeKamar.findOne({
+            where : {id : id},
+            include : Kamar
+        })
+        req.UKK_BACKEND.getTipeKamarOne = {data : result}
+        return next()
     } catch (error) {
         handleServerError(res,error)
     }
@@ -90,9 +106,7 @@ const updateTipeKamar = async (req,res,next) => {
         deskripsi : req.body.deskripsi,
     }
     if(req.file)data.foto = req.file.filename; // ini foto yag belumd i format
-    let oldFoto = getFilePath(req.UKK_BACKEND.getTipeKamar.data.foto); //ini sudah diformat dan akan di resolve
-    console.log(oldFoto);
-    console.log(data.foto);
+    let oldFoto = getFilePath(req.UKK_BACKEND.getTipeKamarOne.data.foto); //ini sudah diformat dan akan di resolve
     try {
         let result = await TipeKamar.update(data, {
             where : {id : req.params.tipe_kamar_id}
@@ -131,5 +145,6 @@ module.exports = {
     getTipeKamar,
     getTipeKamarFull,
     updateTipeKamar,
-    deleteTipeKamar
+    deleteTipeKamar,
+    findTipeKamar
 }

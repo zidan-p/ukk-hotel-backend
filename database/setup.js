@@ -22,22 +22,28 @@ function applyRelation(sequelize){
     User.hasMany(Pemesanan);
 
     // -- pemesanan dengan detail pemesanan --
-    Pemesanan.hasOne(DetailPemesanan);
+    Pemesanan.hasOne(DetailPemesanan,{
+        onDelete : "CASCADE"
+    });
     DetailPemesanan.belongsTo(Pemesanan);
 
     // -- detail pemesanan dengan kamar --
     DetailPemesanan.belongsToMany(Kamar, {
         through:'kamar_pemesanan_junction',
-        as : "daftarKamar"
+        as : "DaftarKamar",
     });
     Kamar.belongsToMany(DetailPemesanan, {
         through:'kamar_pemesanan_junction',
-        as : "daftarDetailPemesanan"
+        as : "DaftarDetailPemesanan"
     });
 
     // -- detail pemesanan dengan tipe kamar 
-    DetailPemesanan.belongsTo(TipeKamar);
-    TipeKamar.hasMany(DetailPemesanan);
+    DetailPemesanan.belongsTo(TipeKamar,{
+        as : "TipeKamarPemesanan"
+    });
+    TipeKamar.hasMany(DetailPemesanan,{
+        as : "DaftarPemesanan"
+    });
 }
 
 

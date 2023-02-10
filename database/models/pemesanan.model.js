@@ -4,13 +4,13 @@ const {generateRandomString} = require("./../../utils/randomString");
 
 module.exports = (sequelize) => {
 	sequelize.define('Pemesanan', {
-        nomorPemesanan     : {
-            allowNull       : false,
+        nomorPemesanan      : {
+            allowNull       : true,
             type            : DataTypes.STRING,
-            set(){
-                const date = format(new Date(), "YYYYMMLL-");
+            defaultValue    : () => {
+                const date = format(new Date(), "yyyyMMLL-");
                 const str = generateRandomString(5);
-                this.setDataValue("nomor_pemesanan", date + str)
+                return date + str
             }
         },
         namaPemesan        : {
@@ -23,15 +23,15 @@ module.exports = (sequelize) => {
         },
         tglPemesanan       : {
             allowNull       : false,
-            type            : DataTypes.TIME
+            type            : DataTypes.DATE
         },
         tglCheckIn        : {
             allowNull       : false,
-            type            : DataTypes.TIME
+            type            : DataTypes.DATE
         },
         tglCheckOut       : {
             allowNull       : false,
-            type            : DataTypes.TIME
+            type            : DataTypes.DATE
         },
         status              :{
             type            : DataTypes.ENUM(

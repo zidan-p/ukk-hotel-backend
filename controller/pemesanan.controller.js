@@ -1,3 +1,7 @@
+// import library
+const fsn = require("date-fns");
+
+
 const sequelize = require("./../database");
 const models = sequelize.models;
 const Pemesanan = models.Pemesanan
@@ -14,6 +18,8 @@ const {
 
 // diasumsikan semua sudah ada
 const createPemesananDirect = async ( req, res, next ) => {
+    const kamarCount = req.UKK_BACKEND.getKamarList.count;
+    const harga     = req.UKK_BACKEND.getTipeKamarOne.data.harga;
     const data = {
         namaPemesan : req.body.dataPemesan,
         emailPemesan : req.body.emailPemesan,
@@ -21,7 +27,7 @@ const createPemesananDirect = async ( req, res, next ) => {
         tglCheckIn : req.body.tglCheckIn,
         tglCheckOut : req.body.tglCheckOut,
         detailPemesanan : {
-
+            hargaTotal : kamarCount * harga
         }
     }
 
@@ -29,9 +35,8 @@ const createPemesananDirect = async ( req, res, next ) => {
         let result = await Pemesanan.create(data,{
             include : DetailPemesanan
         })
-        req.UKK_BACKEND.createPemesananDirect = {
-            data : result
-        }
+        req.UKK_BACKEND.pemesananOne = {data : result}
+        req.UKK_BACKEND.detailPemesananOne = {data : result.detailPemesanan}
         return next
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
@@ -41,18 +46,17 @@ const createPemesananDirect = async ( req, res, next ) => {
 
 
 
-const createPemesananOnly = async (req, res, next) => {
+const createPemesanan = async (req, res, next) => {
     const data = {
-        namaPemesan : req.body.dataPemesan,
+        namaPemesan : req.body.namaPemesan,
         emailPemesan : req.body.emailPemesan,
         tglPemesanan : req.body.tglPemesanan,
         tglCheckIn : req.body.tglCheckIn,
         tglCheckOut : req.body.tglCheckOut
     }
-
     try {
         let result = await Pemesanan.create(data)
-        req.UKK_BACKEND.createPemesananOnly = {data : result}
+        req.UKK_BACKEND.pemesananOne = {data : result}
         return next()
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
@@ -61,11 +65,11 @@ const createPemesananOnly = async (req, res, next) => {
 }
 
 
-const getPemesananOnly = async (req,res,next) => {
+const getPemesanan = async (req,res,next) => {
     try {
-        const result = await Pemesanan.findByPk(req.params.id);
+        const result = await Pemesanan.findByPk(req.params.pemesanan_id);
         if (result === null)throw new Error("tidak dapat menemukan pemesanan");
-        req.UKK_BACKEND.getPemesananOnly = {
+        req.UKK_BACKEND.getPemesananOne = {
             data : result 
         }
         return next();
@@ -75,18 +79,16 @@ const getPemesananOnly = async (req,res,next) => {
     }
 }
 
-const getPemesananwithChild = async (req,res,next) => {
+const getPemesananFull = async (req,res,next) => {
     try {
-        const result = await Pemesanan.findByPk(req.params.id,{
+        const result = await Pemesanan.findByPk(req.params.pemesanan_id,{
             include : {
                 model : DetailPemesanan,
-                include : Kamar
+                include : {model : Kamar, as : "DaftarKamar"}
             }
         });
         if (result === null)throw new Error("tidak dapat menemukan pemesanan");
-        req.UKK_BACKEND.getPemesananOnly = {
-            data : result 
-        }
+        req.UKK_BACKEND.getpemesananOne = {data : result}
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
@@ -95,13 +97,10 @@ const getPemesananwithChild = async (req,res,next) => {
 }
 
 
-const getAllPemesananOnly = async (req,res,next) => {
+const getAllPemesanan = async (req,res,next) => {
     try {
-        const {count, rows} = await Pemesanan.findAll();
-        req.UKK_BACKEND.getAllPemesananOnly = {
-            data : rows,
-            count : count
-        }
+        const {count, rows} = await Pemesanan.findAndCountAll();
+        req.UKK_BACKEND.getPesananList = {data : rows,count : count}
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
@@ -110,18 +109,15 @@ const getAllPemesananOnly = async (req,res,next) => {
 }
 
 
-const getAllPemesananWithChild = async (req,res,next) => {
+const getAllPemesananFull = async (req,res,next) => {
     try {
-        const {count, rows} = await Pemesanan.findAll({
+        const {count, rows} = await Pemesanan.findAndCountAll({
             include : {
                 model : DetailPemesanan,
-                include : Kamar
+                include : {model : Kamar, as : "DaftarKamar"}
             }
         });
-        req.UKK_BACKEND.getAllKamar = {
-            data : rows,
-            count : count
-        };
+        req.UKK_BACKEND.getPesananList = {data : rows,count : count};
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
@@ -140,7 +136,7 @@ const updatePemesanan = async (req,res,next) => {
     }
     try {
         const result = await Pemesanan.update(data, {
-            where : {id : req.params.id}
+            where : {id : req.params.pemesanan_id}
         })
         req.UKK_BACKEND.updatePemesanan = {
             data : result
@@ -155,7 +151,7 @@ const updatePemesanan = async (req,res,next) => {
 
 const deletePemesanan = async (req,res,next) => {
     try {
-        const result = await Pemesanan.destroy({where:{id : req.params.id}})
+        const result = await Pemesanan.destroy({where:{id : req.params.pemesanan_id}})
         req.UKK_BACKEND.deletePemesanan = {
             data : result
         }
@@ -174,11 +170,11 @@ const deletePemesanan = async (req,res,next) => {
 
 module.exports = {
     createPemesananDirect,
-    createPemesananOnly,
-    getAllPemesananOnly,
-    getAllPemesananWithChild,
-    getPemesananOnly,
-    getPemesananwithChild,
+    createPemesanan,
+    getAllPemesanan,
+    getAllPemesananFull,
+    getPemesanan,
+    getPemesananFull,
     updatePemesanan,
     deletePemesanan
 }
