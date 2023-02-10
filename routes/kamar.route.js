@@ -11,6 +11,8 @@ const dataHandler = require("./../middleware/dataHandler")
 //ROuter
 const Route = require("express").Router()
 
+const authController = require("./../controller/authorization.controller");
+
 // GET
 
 Route.get(
@@ -48,6 +50,11 @@ Route.post(
     dataHandler.endHandler
 )
 
+Route.post(
+    "/find-available-kamar",
+    kamarController.findKamarThatAvailableInCertainInterval,
+    dataHandler.endHandler
+)
 
 Route.post(
     "/create-one-with-tipe-kamar/:tipe_kamar_id",
