@@ -6,6 +6,7 @@ const pemesananController = require("./../controller/pemesanan.controller")
 const kamarController = require("./../controller/kamar.controller")
 const tipeKamarController = require("./../controller/tipeKamar.controller");
 const detailPemesananController = require("./../controller/detailPemesanan.controller");
+const userController = require("./../controller/user.controller");
 
 
 //data handler
@@ -42,6 +43,14 @@ Route.get(
 
 
 // POST
+
+Route.post(
+    "/accept-pemesanan/:pemesanan_id",
+    pemesananController.getPemesanan,
+    userController.findUser,
+    pemesananController.acceptPemesanan,
+    dataHandler.endHandler
+)
 
 Route.post(
     "/transaction-direct",

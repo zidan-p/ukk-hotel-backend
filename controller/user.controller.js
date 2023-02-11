@@ -25,7 +25,7 @@ const createUser = async ( req, res, next ) => {
     }
     try{
         let result = await User.create(data);
-        req.UKK_BACKEND.createUser = {data : result};
+        req.UKK_BACKEND.userOne = {data : result};
         return next();
     }catch (err) {
         if (err.name === 'SequelizeValidationError') handleSequelizeError(res, err);
@@ -33,10 +33,23 @@ const createUser = async ( req, res, next ) => {
     }
 }
 
+const findUser = async (req,res,next) => {
+    const UserId = req.body.UserId;
+    try {
+        const result = await User.findByPk(UserId)
+        if (result === null) throw new Error("user tidak ditemukan")
+        req.UKK_BACKEND.getUserOne = {data : result}
+        return next();
+    } catch (err) {
+        handleServerError(res,err);
+    }
+}
+
+
 const getAllUser = async (req, res, next) => {
     try {
         const { count, rows } = await User.findAndCountAll();
-        req.UKK_BACKEND.getAllUser = {
+        req.UKK_BACKEND.getUserList = {
             data : rows,
             count : count
         }
@@ -52,7 +65,7 @@ const getAllAdmin = async (req, res, next) => {
         const {count, rows} = await User.findAndCountAll({
             where: {role: "admin"}
         })
-        req.UKK_BACKEND.getAllAdmin = {
+        req.UKK_BACKEND.getUserList = {
             data: rows,
             count : count
         }
@@ -68,7 +81,7 @@ const getAllResepsionis = async ( req, res, next ) => {
         await User.findAndCountAll({
             where: {role: "resepsionis"}
         })
-        req.UKK_BACKEND.getAllResepsionis = {
+        req.UKK_BACKEND.getUserList = {
             data: rows,
             count : count
         }
@@ -85,7 +98,7 @@ const getUser = async ( req, res, next ) => {
             where: {id: req.params.user_id}
         })
         if (result === null) throw new Error("user tidak ditemukan")
-        req.UKK_BACKEND.getUser = {data : result.dataValues}
+        req.UKK_BACKEND.getUserOne = {data : result}
         return next();
     } catch (err) {
         handleServerError(res,err);
@@ -99,7 +112,7 @@ const getUserByUsername = async ( req, res, next ) => {
             where: {username : req.params.username}
         })
         if (result === null) throw new Error("user tidak ditemukan")
-        req.UKK_BACKEND.getUserByUsername = {data : result}
+        req.UKK_BACKEND.getUserOne = {data : result}
         return next()
     } catch (err) {
         handleServerError(res,err);
@@ -115,7 +128,7 @@ const updateUser = async ( req, res, next ) => {
         role : req.body.role
     }
     if(req.file)data.foto = req.file.filename; // ini foto yag belumd i format
-    let oldFoto = getFilePath(req.UKK_BACKEND.getUser.data.foto); //ini sudah diformat dan akan di resolve
+    let oldFoto = getFilePath(req.UKK_BACKEND.getUserOne.data.foto); //ini sudah diformat dan akan di resolve
     try {
         let result = await User.update(data, {
             where: {id : req.params.id}
@@ -133,7 +146,7 @@ const updateUser = async ( req, res, next ) => {
 const deleteUser = async ( req, res, next) =>  {
     try {
         await User.destroy({where : {id : req.params.id}});
-        const fotoPath = getFilePath(req.UKK_BACKEND.getUser.data.foto)
+        const fotoPath = getFilePath(req.UKK_BACKEND.getUserOne.data.foto)
         deleteFileIfExist(fotoPath);
         delete req.UKK_BACKEND.getUser
         req.UKK_BACKEND.deleteUser = {
@@ -161,4 +174,5 @@ module.exports = {
     getUser,
     getUserByUsername,
     updateUser,
+    findUser
 }

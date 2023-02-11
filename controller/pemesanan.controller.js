@@ -7,6 +7,7 @@ const models = sequelize.models;
 const Pemesanan = models.Pemesanan
 const DetailPemesanan = models.DetailPemesanan
 const Kamar = models.Kamar
+const User = models.User
 
 const {
     handleServerError,
@@ -58,6 +59,36 @@ const createPemesanan = async (req, res, next) => {
         let result = await Pemesanan.create(data)
         req.UKK_BACKEND.pemesananOne = {data : result}
         return next()
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error) 
+    }
+}
+
+const acceptPemesanan = async (req,res,next) => {
+    const data = {status : "diterima"}
+    try {
+        const userInstance = User.findByPk(req.UKK_BACKEND.getUserOne.data.id);
+        const pemesananInstance = Pemesanan.findByPk(req.UKK_BACKEND.getPemesananOne.data.id)
+        await pemesananInstance.setUser(userInstance);
+        return next();
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error) 
+    }
+}
+
+const findPemesanan = async (req,res,next) => {
+    const data = {
+        pemesananId : req.body.PemesananId
+    }
+    try {
+        const result = await Pemesanan.findByPk(data.pemesananId);
+        if (result === null)throw new Error("tidak dapat menemukan pemesanan");
+        req.UKK_BACKEND.getPemesananOne = {
+            data : result 
+        }
+        return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
         else handleServerError(res,error) 
@@ -176,7 +207,9 @@ module.exports = {
     getPemesanan,
     getPemesananFull,
     updatePemesanan,
-    deletePemesanan
+    deletePemesanan,
+    acceptPemesanan,
+    findPemesanan
 }
 
 

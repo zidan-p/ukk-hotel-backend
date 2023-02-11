@@ -1,10 +1,14 @@
 const sequelize = require("./../database");
 const { Op, Sequelize } = require("sequelize")
+const fsn = require("date-fns")
+
+
 const models = sequelize.models;
 const Kamar = models.Kamar
 const TipeKamar = models.TipeKamar
 const DetailPemesanan = models.DetailPemesanan
 const Pemesanan = models.Pemesanan
+
 
 const {
     handleServerError,
@@ -136,61 +140,48 @@ const getKamarByTipeKamarId = async (req,res,next)=> {
 
 
 const findKamarThatAvailableInCertainInterval = async (req,res,next) =>{
-    console.log("ini body untuk find kamar that available")
-    console.log(req.body)
     const intervalDate = req.body.intervalDate;
-    // const start = new Date(intervalDate.start);
-    // const end = new Date(intervalDate.end)
     const start = intervalDate.start;
-    const end = intervalDate.end
+    const end = intervalDate.end;
+    const reqInterval = { start : new Date(start),end : new Date(end)}
     try {
         // -- waht deee heeellllll --
-        // let {count,rows} = await Kamar.findAndCountAll({
-        //     where : {
-        //         [Op.not] : {[Op.or] : [
-        //             {"DaftarDetailPemesanan.Pemesanan.tglCheckIn" : {[Op.gt] : end, [Op.gt] : start}},
-        //             {"DaftarDetailPemesanan.Pemesanan.tglCheckOut" : {[Op.lt] : end, [Op.lt] : start}}
-        //         ]}
-                
-        //     },
-        //     include : {
-        //         model : DetailPemesanan,
-        //         as : "DaftarDetailPemesanan",
-        //         include : {
-        //             model : Pemesanan,
-        //             // where : {
-        //             //     // "tglCheckOut" : {[Op.lt] : new Date()}
-        //             // }
-        //             // where : {
-        //             //     [Op.not] : {[Op.or] : [
-        //             //         {"tglCheckIn" : {[Op.gt] : end, [Op.gt] : start}},
-        //             //         {"tglCheckOut" : {[Op.lt] : end, [Op.lt] : start}}
-        //             //     ]}
-        //             // }
-        //         }
-        //     }
-        // })
+        // saya tidak bisa menggunakan sequelize ataupun raw quueri untuk mendapatkan data yg sama mau
+        let {count,rows} = await Kamar.findAndCountAll({
+            attributes : ["id", "nama", "TipeKamarId"],
+            include : {
+                model : DetailPemesanan,
+                attributes : ["id"],
+                as : "DaftarDetailPemesanan",
+                include : {
+                    model : Pemesanan,
+                    attributes : ["id", "tglCheckIn", "tglCheckOut"]
+                }
+            }
+        })
 
-        // const result = await sequelize.query(`
-        // SELECT kamar.id, kamar.nama
-        // FROM Kamar
-        // INNER JOIN kamar_pemesanan_junction ON kamar_pemesanan_junction.kamarId = kamar.id
-        // INNER JOIN detail_pemesanan ON kamar_pemesanan_junction.DetailPemesananId = detail_pemesanan.id
-        // INNER JOIN pemesanan ON pemesanan.id = detail_pemesanan.PemesananId
-        // WHERE (pemesanan.tglCheckIn < "${end} AND pemesanan.tglCheckIn < ${start}" ) 
-        //     OR (pemesanan.tglCheckOut > "${end} AND pemesanan.tglCheckOut ${start}")
-        // `)
-        // const result = await sequelize.query(`
-        // SELECT *
-        // FROM Kamar
-        // LEFT OUTER JOIN kamar_pemesanan_junction ON kamar_pemesanan_junction.kamarId = kamar.id
-        // LEFT JOIN detail_pemesanan ON kamar_pemesanan_junction.DetailPemesananId = detail_pemesanan.id
-        
-        // `)
+        // jadi saya membiarkan node js yang menangani
+        const result = rows.map(kamar => {
+            if(kamar.DaftarDetailPemesanan.length === 0){
+                return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : true}
+            }
+            const kamarInterval = {
+                start : new Date(kamar.DaftarDetailPemesanan[0].Pemesanan.tglCheckIn),
+                end  : new Date(kamar.DaftarDetailPemesanan[0].Pemesanan.tglCheckOut)
+            }
+            if(fsn.areIntervalsOverlapping(kamarInterval, reqInterval)) {
+                return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : false}
+            }
+            return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : true}
+        })
+
+
         req.UKK_BACKEND.kamarList = {
             data : result
         }
         return next();
+
+        // TODO : buat validasi di backend bila kamar yg dipesan itu valid
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
         else handleServerError(res,error) 

@@ -72,9 +72,7 @@ const getTipeKamarFull = async (req,res,next) => {
     try {
         const result = await TipeKamar.findOne({
             where : {id : req.params.tipe_kamar_id},
-            include : [{
-                model : Kamar,
-            }]
+            include : [{ model : Kamar}]
         })
         req.UKK_BACKEND.getTipeKamarOne = {data :result}
         return next();
