@@ -29,7 +29,7 @@ const createUser = async ( req, res, next ) => {
         return next();
     }catch (err) {
         if (err.name === 'SequelizeValidationError') handleSequelizeError(res, err);
-        else handleServerError(res,err);
+        else handleServerError(res,err,req);
     }
 }
 
@@ -41,7 +41,7 @@ const findUser = async (req,res,next) => {
         req.UKK_BACKEND.getUserOne = {data : result}
         return next();
     } catch (err) {
-        handleServerError(res,err);
+        handleServerError(res,err,req);
     }
 }
 
@@ -55,7 +55,7 @@ const getAllUser = async (req, res, next) => {
         }
         return next();
     } catch (err) {
-        handleServerError(res,err)
+        handleServerError(res,err,req)
     }
 }
 
@@ -71,7 +71,7 @@ const getAllAdmin = async (req, res, next) => {
         }
         return next()
     }catch(err){
-        handleServerError(res,err)
+        handleServerError(res,err,req)
     }
 }
 
@@ -87,7 +87,7 @@ const getAllResepsionis = async ( req, res, next ) => {
         }
         return next();
     }catch(err){
-        handleServerError(res,err)
+        handleServerError(res,err,req)
     }
 }
 
@@ -101,7 +101,7 @@ const getUser = async ( req, res, next ) => {
         req.UKK_BACKEND.getUserOne = {data : result}
         return next();
     } catch (err) {
-        handleServerError(res,err);
+        handleServerError(res,err,req);
     }
 }
 
@@ -115,7 +115,7 @@ const getUserByUsername = async ( req, res, next ) => {
         req.UKK_BACKEND.getUserOne = {data : result}
         return next()
     } catch (err) {
-        handleServerError(res,err);
+        handleServerError(res,err,req);
     }
 }
 
@@ -131,14 +131,14 @@ const updateUser = async ( req, res, next ) => {
     let oldFoto = getFilePath(req.UKK_BACKEND.getUserOne.data.foto); //ini sudah diformat dan akan di resolve
     try {
         let result = await User.update(data, {
-            where: {id : req.params.id}
+            where: {id : req.UKK_BACKEND.getUserOne.data.id}
         })
         if(req.file && oldFoto) await deleteFileIfExist(oldFoto)
         req.UKK_BACKEND.updateUser = {data : result}
         return next();
     } catch (err) {
         if(err.name === 'SequelizeValidationError') handleSequelizeError(res,err);
-        else handleServerError(res,err);
+        else handleServerError(res,err,req);
     }
 }
 
@@ -154,7 +154,7 @@ const deleteUser = async ( req, res, next) =>  {
         }
         return next()
     } catch (err) {
-        handleServerError(res,err)
+        handleServerError(res,err,req)
     }
 }
 

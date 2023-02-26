@@ -34,7 +34,7 @@ const createTipeKamar = async ( req, res, next ) =>{
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -48,13 +48,12 @@ const getAllTipeKamar = async ( req, res, next ) => {
         }
         return next();
     } catch (error) {
-        handleServerError(res,error)
+        handleServerError(res,error,req)
     }
 }
 
 // jaga2 error
 const getTipeKamar = async (req,res,next) => {
-    console.log(req.params.tipe_kamar_id);
     try {
         const result = await TipeKamar.findOne({ 
             where : {id : req.params.tipe_kamar_id}
@@ -63,7 +62,7 @@ const getTipeKamar = async (req,res,next) => {
         req.UKK_BACKEND.getTipeKamarOne = {data :result}
         return next();
     } catch (error) {
-        handleServerError(res,error)
+        handleServerError(res,error,req)
     }
 }
 
@@ -77,7 +76,7 @@ const getTipeKamarFull = async (req,res,next) => {
         req.UKK_BACKEND.getTipeKamarOne = {data :result}
         return next();
     } catch (error) {
-        handleServerError(res,error)
+        handleServerError(res,error,req)
     }
 }
 
@@ -92,7 +91,7 @@ const findTipeKamar = async (req,res,next) => {
         req.UKK_BACKEND.getTipeKamarOne = {data : result}
         return next()
     } catch (error) {
-        handleServerError(res,error)
+        handleServerError(res,error,req)
     }
 }
 
@@ -114,7 +113,7 @@ const updateTipeKamar = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -129,7 +128,7 @@ const deleteTipeKamar = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 

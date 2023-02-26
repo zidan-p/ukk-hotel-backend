@@ -30,7 +30,7 @@ const createKamarOne = async (req,res,next) => {
         return next()
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error)        
+        else handleServerError(res,error,req)        
     }
 }
 
@@ -56,7 +56,7 @@ const createKamarMany = async (req, res, next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error)       
+        else handleServerError(res,error,req)       
     }
 
 }
@@ -72,7 +72,7 @@ const createKamarBulk = async (req, res, next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error)       
+        else handleServerError(res,error,req)       
     }
 }
 
@@ -84,7 +84,7 @@ const getAllkamar = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -99,7 +99,7 @@ const getKamar = async (req,res,next)=>{
         return next()
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -115,7 +115,7 @@ const getKamarFull = async (req,res,next)=>{
         return next()
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -134,7 +134,7 @@ const getKamarByTipeKamarId = async (req,res,next)=> {
         return next()
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -184,10 +184,60 @@ const findKamarThatAvailableInCertainInterval = async (req,res,next) =>{
         // TODO : buat validasi di backend bila kamar yg dipesan itu valid
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
+const findKamarThatAvailableInCertainIntervalByTipeKamarId = async (req,res,next) =>{
+    const TipeKamarId = req.body.TipeKamarId;
+    const intervalDate = req.body.intervalDate;
+    const start = intervalDate.start;
+    const end = intervalDate.end;
+    const reqInterval = { start : new Date(start),end : new Date(end)}
+    try {
+        // -- waht deee heeellllll --
+        // saya tidak bisa menggunakan sequelize ataupun raw quueri untuk mendapatkan data yg sama mau
+        let {count,rows} = await Kamar.findAndCountAll({
+            attributes : ["id", "nama", "TipeKamarId"],
+            include : {
+                model : DetailPemesanan,
+                attributes : ["id"],
+                as : "DaftarDetailPemesanan",
+                include : {
+                    model : Pemesanan,
+                    attributes : ["id", "tglCheckIn", "tglCheckOut"]
+                }
+            }
+        })
+
+        // jadi saya membiarkan node js yang menangani
+        const result = rows.map(kamar => {
+            if(kamar.DaftarDetailPemesanan.length === 0){
+                return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : true}
+            }
+            const kamarInterval = {
+                start : new Date(kamar.DaftarDetailPemesanan[0].Pemesanan.tglCheckIn),
+                end  : new Date(kamar.DaftarDetailPemesanan[0].Pemesanan.tglCheckOut)
+            }
+            if(fsn.areIntervalsOverlapping(kamarInterval, reqInterval)) {
+                return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : false}
+            }
+            return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : true}
+        })
+        .filter(dat => dat.TipeKamarId === TipeKamarId );
+
+
+        req.UKK_BACKEND.kamarList = {
+            data : result
+        }
+        return next();
+
+        // TODO : buat validasi di backend bila kamar yg dipesan itu valid
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error,req) 
+    }
+}
 
 const findSomeKamarByIdList = async (req,res,next) => {
     let idList = req.body.KamarIdList 
@@ -203,7 +253,7 @@ const findSomeKamarByIdList = async (req,res,next) => {
         return next();
     }catch(error){
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -218,7 +268,7 @@ const checkIfTipeKamarIsCorrespond = async (req,res,next) => {
         return next();
     }catch(error){
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -232,7 +282,7 @@ const updateKamar = async (req, res, next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -245,7 +295,7 @@ const deleteKamar = async (req, res, next) => {
         return next()
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -263,6 +313,6 @@ module.exports = {
     createKamarBulk,
     checkIfTipeKamarIsCorrespond,
     getKamarFull,
-    findKamarThatAvailableInCertainInterval
-    
+    findKamarThatAvailableInCertainInterval,
+    findKamarThatAvailableInCertainIntervalByTipeKamarId
 }

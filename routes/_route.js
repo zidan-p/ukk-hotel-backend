@@ -21,7 +21,8 @@ const tipeKamarRouter = require("./tipeKamar.route");
 const kamarRouter = require("./kamar.route");
 const pemesananRouter = require("./pemesanan.route");
 const detailPemesananRouter = require("./detailPemesanan.route");
-const authenticationController = require("./login.route");
+const authenticationRouter = require("./login.route");
+const getFileRouter = require("./file.route");
 
 // // Route
 app.use("/user", firstHandler, userRouter, endHandler);
@@ -29,7 +30,8 @@ app.use("/tipe-kamar", firstHandler, tipeKamarRouter, endHandler);
 app.use("/kamar", firstHandler, kamarRouter, endHandler );
 app.use("/pemesanan", firstHandler, pemesananRouter, endHandler);
 app.use("/detail-pemesanan", firstHandler, detailPemesananRouter, endHandler);
-app.use("/", firstHandler, authenticationController, endHandler);
+app.use(getFileRouter);
+app.use("/", firstHandler, authenticationRouter, endHandler);
 
 
 

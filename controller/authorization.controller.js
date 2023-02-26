@@ -56,7 +56,7 @@ const login = async (req,res,next) => {
 
     } catch (error) {
         console.log(error);
-        handleServerError(res,error);
+        handleServerError(res,error,req);
     }
 }
 
@@ -67,7 +67,7 @@ const authRole_ = (roleList = []) => async(req,res,next) => {
     const token = authHeader && authHeader.split(' ')[1];
     if(token == null) return res.sendStatus(401);
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
-        if(err) return res.sendStatus(403).json({
+        if(err) return res.status(403).json({
             success : false,
             data: {message : "forbidden"}
         });
@@ -75,7 +75,7 @@ const authRole_ = (roleList = []) => async(req,res,next) => {
         if(roleList.includes(decoded.role)){
             return next();
         }
-        if(err) return res.sendStatus(403).json({
+        if(err) return res.status(403).json({
             success : false,
             data: {message : "forbidden"}
         });
@@ -85,21 +85,28 @@ const authRole_ = (roleList = []) => async(req,res,next) => {
 const authRole = (roleList = []) => async (req,res,next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    if(token == null) return res.sendStatus(401);
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
-        if(err) return res.sendStatus(403).json({
+
+    if(token == null) {
+        return res.status(401).json({
             success : false,
             data: {message : "forbidden"}
         });
-        console.log(decoded);
-        if(roleList.includes(decoded.role)){
-            return next();
-        }
-        return res.sendStatus(403).json({
+    }
+
+    try {
+        let decoded = await jwt.verify(token, SECRET_KEY)    
+        if(!roleList.includes(decoded.role)) return res.status(403).json({
             success : false,
             data: {message : "forbidden"}
         });
-    })
+        return next();
+    } catch (error) {
+        return next();
+        // return res.status(400).json({
+        //     success : false,
+        //     data: {message : "forbidden"}
+        // })
+    }
 }
 
 

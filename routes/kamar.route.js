@@ -57,6 +57,12 @@ Route.post(
 )
 
 Route.post(
+    "/find-available-kamar-by-tipe-kamar",
+    kamarController.findKamarThatAvailableInCertainIntervalByTipeKamarId,
+    dataHandler.endHandler
+)
+
+Route.post(
     "/create-one-with-tipe-kamar/:tipe_kamar_id",
     authController.authRole(["admin","resepsionis"]),
     getTipeKamar,

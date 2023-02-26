@@ -26,7 +26,7 @@ const validation = (schema) => async (req, res, next) => {
         if(error instanceof ValidationError){
             handleJoiError(res,error)
         }else{
-            handleServerError(res,error)
+            handleServerError(res,error,req)
         }
 
     }

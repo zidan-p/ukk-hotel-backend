@@ -35,7 +35,7 @@ Route.get(
 Route.get(
     "/full", 
     detailPemesananController.getAllDetailPemesananFull,
-    (req,res) => {return res.status(200).json({test : req.UKK_BACKEND})},
+    // (req,res) => {return res.status(200).json({test : req.UKK_BACKEND})},
     dataHandler.endHandler
 )
 

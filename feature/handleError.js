@@ -1,4 +1,4 @@
-
+const {deleteFileIfExist,getFilePath} = require("./../feature/handleFile")
 
 function parseSequelizeError1(err) {
     const errors = err.errors
@@ -28,9 +28,20 @@ function parseJoiError(error){
     })
 }
 
-function handleServerError(res,error){
+function handleServerError(res,error,req){
     console.error(new Error(`maaf, kami tidak bisa menyimpan ${error.name}`));
     console.error(error);
+
+    //hapus semua file yg di upload
+    
+    if(req?.file){
+        deleteFileIfExist(getFilePath(req.file.filename))
+    }else if (req.files){
+        res.files.forEach(async fl => {
+            await deleteFileIfExist(getFilePath(fl.filename))
+        })
+    }
+
     return res.status(500).json({
         success : false,
         error : error.message

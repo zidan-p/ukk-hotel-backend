@@ -27,6 +27,7 @@ const createPemesananDirect = async ( req, res, next ) => {
         tglPemesanan : req.body.tglPemesanan,
         tglCheckIn : req.body.tglCheckIn,
         tglCheckOut : req.body.tglCheckOut,
+        namaTamu : req.body.namaTamu,
         detailPemesanan : {
             hargaTotal : kamarCount * harga
         }
@@ -41,7 +42,7 @@ const createPemesananDirect = async ( req, res, next ) => {
         return next
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -53,7 +54,8 @@ const createPemesanan = async (req, res, next) => {
         emailPemesan : req.body.emailPemesan,
         tglPemesanan : req.body.tglPemesanan,
         tglCheckIn : req.body.tglCheckIn,
-        tglCheckOut : req.body.tglCheckOut
+        tglCheckOut : req.body.tglCheckOut,
+        namaTamu : req.body.namaTamu
     }
     try {
         let result = await Pemesanan.create(data)
@@ -61,7 +63,7 @@ const createPemesanan = async (req, res, next) => {
         return next()
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -74,7 +76,7 @@ const acceptPemesanan = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -91,7 +93,7 @@ const findPemesanan = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -106,7 +108,7 @@ const getPemesanan = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -123,7 +125,7 @@ const getPemesananFull = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -135,7 +137,7 @@ const getAllPemesanan = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -152,7 +154,7 @@ const getAllPemesananFull = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -175,7 +177,7 @@ const updatePemesanan = async (req,res,next) => {
         return next()
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 
@@ -189,7 +191,7 @@ const deletePemesanan = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
-        else handleServerError(res,error) 
+        else handleServerError(res,error,req) 
     }
 }
 

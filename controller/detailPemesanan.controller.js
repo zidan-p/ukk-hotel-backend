@@ -23,7 +23,7 @@ const createDetailPemesanan = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -37,7 +37,7 @@ const attachDetailPemesananToPemesanan = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -56,7 +56,7 @@ const attachDetailPemesananToKamar = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -86,7 +86,7 @@ const getDetailPemesananByPemesananId = async (req,res,next) => {
         return next()
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -98,7 +98,7 @@ const getAllDetailPemesanan = async (req,res,next) => {
         return next()
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -114,7 +114,7 @@ const getAllDetailPemesananFull = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -127,7 +127,7 @@ const getDetailPemesanan = async (req,res,next) => {
         return next()
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -145,7 +145,7 @@ const getDetailPemesananFull = async (req,res,next) => {
         return next()
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -161,7 +161,7 @@ const updateDetailPemesanan = async (req,res,next) => {
         return next()
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -181,7 +181,7 @@ const updateKamarAssociation = async (req,res,next) => {
         return next();
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 
@@ -196,7 +196,7 @@ const deleteDetailPemesanan = async (req,res,next) => {
         return next()
     } catch (error) {
         if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
-        else handleServerError(res,error)
+        else handleServerError(res,error,req)
     }
 }
 

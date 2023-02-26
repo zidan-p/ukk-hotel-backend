@@ -20,7 +20,6 @@ const upload = multer();
 //Router
 const Route = require("express").Router();
 
-console.log(authController);
 
 // GET
 Route.get(
@@ -59,6 +58,14 @@ Route.get(
 );
 
 
+// Route.get(
+//     "/",
+//     (req,res) => {
+//         return res.json()
+//     }
+// )
+
+
 
 // POST
 Route.post(
@@ -72,7 +79,11 @@ Route.post(
 
 // PUT
 Route.put(
-    "/:id",
+    "/:user_id",
+    (req,res,next)=>{
+        console.log(req.params.user_id)
+        return next();
+    },
     authController.authRole(["admin","resepsionis"]), 
     uploadFile("foto"),
     validation(validationSchema.updateUserSchema),
@@ -83,7 +94,7 @@ Route.put(
 
 // DElETE
 Route.delete(
-    "/:id",
+    "/:user_id",
     authController.authRole(["admin","resepsionis"]),
     userController.getUser,
     userController.deleteUser,

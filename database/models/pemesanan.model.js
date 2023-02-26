@@ -13,6 +13,10 @@ module.exports = (sequelize) => {
                 return date + str
             }
         },
+        namaTamu        : {
+            allowNull       : false,
+            type            : DataTypes.STRING
+        },
         namaPemesan        : {
             allowNull       : false,
             type            : DataTypes.STRING
