@@ -21,7 +21,7 @@ const tipeKamarRouter = require("./tipeKamar.route");
 const kamarRouter = require("./kamar.route");
 const pemesananRouter = require("./pemesanan.route");
 const detailPemesananRouter = require("./detailPemesanan.route");
-const authenticationRouter = require("./login.route");
+const authenticationRouter = require("./auth.route");
 const getFileRouter = require("./file.route");
 
 // // Route

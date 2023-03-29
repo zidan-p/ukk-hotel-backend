@@ -6,12 +6,6 @@ module.exports = (sequelize) => {
         namaTipeKamar : {
             allowNull   : true,
             type        : DataTypes.STRING,
-            // -- saya tidak tahu mengapa ini begini --
-            // validate    : {
-            //     notEmpty: {
-            //         msg : "harap sediakan nama tipe kamar"
-            //     }
-            // },
             defaultValue: "Kamar Hotel"
         },
         harga           : {

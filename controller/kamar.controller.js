@@ -195,7 +195,7 @@ const findKamarThatAvailableInCertainIntervalByTipeKamarId = async (req,res,next
     const end = intervalDate.end;
     const reqInterval = { start : new Date(start),end : new Date(end)}
     try {
-        // -- waht deee heeellllll --
+        // -- waht dhheee heeellllll --
         // saya tidak bisa menggunakan sequelize ataupun raw quueri untuk mendapatkan data yg sama mau
         let {count,rows} = await Kamar.findAndCountAll({
             attributes : ["id", "nama", "TipeKamarId"],
@@ -205,22 +205,38 @@ const findKamarThatAvailableInCertainIntervalByTipeKamarId = async (req,res,next
                 as : "DaftarDetailPemesanan",
                 include : {
                     model : Pemesanan,
-                    attributes : ["id", "tglCheckIn", "tglCheckOut"]
+                    attributes : ["id", "tglCheckIn", "tglCheckOut"],
+                    order: ["id","DESC"], // saya tidak tahu mengaoa tidak bisa melakuka norder dengan ini
                 }
             }
         })
 
+        //cek untuk req interval
+        console.log("\x1b[33m","untuk req interval");
+        console.log(reqInterval);
+
+        console.log(JSON.parse(JSON.stringify(rows)))
+        // console.log(rows.map(row => row.DaftarDetailPemesanan));
+
         // jadi saya membiarkan node js yang menangani
         const result = rows.map(kamar => {
+            //bila kamar belum pernah ada transaksi
             if(kamar.DaftarDetailPemesanan.length === 0){
                 return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : true}
             }
-            const kamarInterval = {
-                start : new Date(kamar.DaftarDetailPemesanan[0].Pemesanan.tglCheckIn),
-                end  : new Date(kamar.DaftarDetailPemesanan[0].Pemesanan.tglCheckOut)
-            }
-            if(fsn.areIntervalsOverlapping(kamarInterval, reqInterval)) {
-                return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : false}
+
+            // untuk test masing-masing pemesanan
+            for(let i = 0; i < kamar.DaftarDetailPemesanan.length; i++){
+                let pemesananTemp = kamar.DaftarDetailPemesanan[i];
+                const kamarInterval = {
+                    start : new Date(pemesananTemp.Pemesanan.tglCheckIn),
+                    end  : new Date(pemesananTemp.Pemesanan.tglCheckOut)
+                }
+                // bila overlaping antara req denngan transaksi
+                if(fsn.areIntervalsOverlapping(kamarInterval, reqInterval)) {
+                    return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : false}
+                }else{
+                }
             }
             return {id: kamar.id,TipeKamarId : kamar.TipeKamarId ,nama : kamar.nama, isAvailable : true}
         })
@@ -240,7 +256,8 @@ const findKamarThatAvailableInCertainIntervalByTipeKamarId = async (req,res,next
 }
 
 const findSomeKamarByIdList = async (req,res,next) => {
-    let idList = req.body.KamarIdList 
+    console.log(req.body)
+    let idList = req.body.kamarIdList ?? []
     let opt = idList.map((id) => {return {id : id}});
     try{
         const {count, rows} = await Kamar.findAndCountAll({

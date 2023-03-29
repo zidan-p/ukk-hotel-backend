@@ -22,6 +22,14 @@ const Route = require("express").Router();
 
 
 // GET
+
+Route.get(
+    "/filter",
+    authController.authRole(["admin","resepsionis"]),
+    userController.getAllUserFiltered,
+    dataHandler.endHandler
+)
+
 Route.get(
     "/role/admin",
     authController.authRole(["admin","resepsionis"]),
@@ -72,6 +80,10 @@ Route.post(
     "/",
     authController.authRole(["admin","resepsionis"]),                                
     uploadFile("foto"),                             //upload file
+    (req,res,next) => {
+        console.log(req.body);
+        next();
+    },
     validation(validationSchema.createUserSchema),  //validate
     userController.createUser,                      //add to database                  
     dataHandler.endHandler     

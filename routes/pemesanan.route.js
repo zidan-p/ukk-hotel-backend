@@ -27,6 +27,24 @@ Route.get(
 )
 
 Route.get(
+    "/paginate",
+    pemesananController.getAllPemesananOffset,
+    dataHandler.endHandler
+)
+
+Route.get(
+    "/filter",
+    pemesananController.getAllPemesaananFiltered,
+    dataHandler.endHandler
+)
+
+Route.get(
+    "/nomor-pemesanan/:nomor_pemesanan",
+    pemesananController.getPemesananByNomorPemesanan,
+    dataHandler.endHandler
+)
+
+Route.get(
     "/find/full/:pemesanan_id",
     pemesananController.getPemesananFull,
     dataHandler.endHandler
@@ -81,6 +99,13 @@ Route.post(
 )
 
 // PUT
+Route.put(
+    "/status/:pemesanan_id",
+    pemesananController.getPemesanan,
+    pemesananController.updateStatus,
+    dataHandler.endHandler
+)
+
 Route.put(
     "/:pemesanan_id",
     pemesananController.getPemesanan,

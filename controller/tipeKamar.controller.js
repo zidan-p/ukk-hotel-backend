@@ -1,4 +1,5 @@
 const sequelize = require("./../database");
+const { Op } = require("sequelize");
 const models = sequelize.models;
 const TipeKamar = models.TipeKamar
 const Kamar = models.Kamar
@@ -52,6 +53,8 @@ const getAllTipeKamar = async ( req, res, next ) => {
     }
 }
 
+
+
 // jaga2 error
 const getTipeKamar = async (req,res,next) => {
     try {
@@ -81,6 +84,76 @@ const getTipeKamarFull = async (req,res,next) => {
 }
 
 
+const getTipeKamarFiltered = async (req,res,next) => {
+    try{
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        //tanggal dibuat user (created at)
+        const tglAwal = req.query.tgl_awal || "0";
+        const tglAkhir = req.query.tgl_akhir || "0";
+
+        const keyWord = req.query.keyword || ""
+
+        let whereOption = {};
+        //cek apakah parameter valid
+        //paling pertama karena membutuhka where option pertama
+        if(keyWord !== "" && keyWord !== undefined && keyWord !== null){
+            whereOption = {
+                [Op.or] : {
+                    namaTipeKamar : {
+                        [Op.like] : `%${keyWord}%`
+                    },
+                    deskripsi : {
+                        [Op.like] : `%${keyWord}%`
+                    },
+                }
+            }
+        }
+        // if(tglAwal === 0 || tglAkhir === 0) throw new Error("invalid keyword")
+        if(tglAwal !== "0" && tglAkhir !== "0"){
+            whereOption.createdAt = { 
+                [Op.gte] : new Date(tglAwal),
+                [Op.lte] : new Date(tglAkhir)
+            };
+        }
+        else if(tglAwal !== "0") {
+            whereOption.createdAt = { [Op.gte] : new Date(tglAwal)};
+        }
+        else if(tglAkhir !== "0") {
+            whereOption.createdAt = {[Op.lte] : new Date(tglAkhir)};
+        }
+
+
+        const {rows, count} = await TipeKamar.findAndCountAll({
+            where: {
+                ...whereOption
+            },
+            //distinct diperlukan supaya hanya record yang benar2 sesuai yg bisa dihitung
+            //`COUNT(DISTINCT(col))`
+            distinct: true,
+            include : Kamar,
+            limit : limit,
+            offset: limit * (page - 1)
+        })
+
+        const pageCount = Math.ceil(count / limit);
+
+        req.UKK_BACKEND.getTipeKamarList = {
+            data : rows,
+            count : count,
+            limit : limit,
+            pageCount : pageCount,
+            pageCurrent : page
+        }
+        return next();
+    }catch(error){
+        if(error.name === "SequelizeValidationError") handleSequelizeError(res,eror);
+        else handleServerError(res,error,req)
+    }
+}
+
+
 const findTipeKamar = async (req,res,next) => {
     const id = req.body.TipeKamarId
     try {
@@ -98,7 +171,7 @@ const findTipeKamar = async (req,res,next) => {
 
 const updateTipeKamar = async (req,res,next) => {
     const data = {
-        namaTipekamar : req.body.namaTipekamar,
+        namaTipeKamar : req.body.namaTipeKamar,
         harga : req.body.harga,
         deskripsi : req.body.deskripsi,
     }
@@ -141,7 +214,8 @@ module.exports = {
     getAllTipeKamar,
     getTipeKamar,
     getTipeKamarFull,
-    updateTipeKamar,
+    getTipeKamarFiltered,
+    updateTipeKamar, 
     deleteTipeKamar,
-    findTipeKamar
+    findTipeKamar,
 }

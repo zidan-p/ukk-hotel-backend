@@ -22,6 +22,12 @@ Route.get(
 )
 
 Route.get(
+    "/filter",
+    tipeKamarController.getTipeKamarFiltered,
+    dataHandler.endHandler
+)
+
+Route.get(
     "/full/:tipe_kamar_id",
     tipeKamarController.getTipeKamarFull,
     dataHandler.endHandler

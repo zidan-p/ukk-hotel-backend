@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const { roundToNearestMinutesWithOptions } = require("date-fns/fp");
 const jwt = require("jsonwebtoken")
 const sequelize = require("../database");
 const models = sequelize.models;
@@ -27,7 +28,10 @@ const login = async (req,res,next) => {
             }
         })
 
-        console.log(user.toJSON())
+        if(user === null) return res.status(404).json({
+            success : false,
+            error : "Data tidak sesuai"
+        })
 
         const match = bcrypt.compareSync(password, user.password)
         if(!match) return res.status(404).json({
@@ -82,6 +86,28 @@ const authRole_ = (roleList = []) => async(req,res,next) => {
     })
 }
 
+const checkToken = async (req,res,next) => {
+    const token = req.body.token;
+
+    try {
+        let decoded = await jwt.verify(token, SECRET_KEY);
+        return res.json({
+            success : true,
+            data: {
+                isTokenValid : true
+            }
+        })
+    } catch (error) {
+        return res.status(400).json({
+            success : false,
+            data: {
+                isTokenValid : false
+            }
+        })
+    }
+
+}
+
 const authRole = (roleList = []) => async (req,res,next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -101,15 +127,15 @@ const authRole = (roleList = []) => async (req,res,next) => {
         });
         return next();
     } catch (error) {
+        return res.status(400).json({
+            success : false,
+            data: {message : "forbidden"}
+        })
         return next();
-        // return res.status(400).json({
-        //     success : false,
-        //     data: {message : "forbidden"}
-        // })
     }
 }
 
 
 
 
-module.exports = {login,authRole};
+module.exports = {login,authRole,checkToken};

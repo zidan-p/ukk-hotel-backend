@@ -1,4 +1,5 @@
 const sequelize = require("./../database");
+const { Op } = require("sequelize");
 const models = sequelize.models;
 const User = models.User
 
@@ -14,6 +15,7 @@ const {
 
 
 const createUser = async ( req, res, next ) => {
+    console.log(req.body);
     const data = {
         username : req.body.username,
         email : req.body.email,
@@ -119,6 +121,77 @@ const getUserByUsername = async ( req, res, next ) => {
     }
 }
 
+const getAllUserFiltered = async (req,res,next) => {
+    try{
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        //tanggal dibuat user (created at)
+        const tglAwal = req.query.tgl_awal || "0";
+        const tglAkhir = req.query.tgl_akhir || "0";
+
+        const keyWord = req.query.keyword || ""
+
+        const role = req.query.role || "all";
+
+        let whereOption = {};
+        //cek apakah parameter valid
+        //paling pertama karena membutuhka where option pertama
+        if(keyWord !== "" && keyWord !== undefined && keyWord !== null){
+            whereOption = {
+                [Op.or] : {
+                    email : {
+                        [Op.like] : `%${keyWord}%`
+                    },
+                    username : {
+                        [Op.like] : `%${keyWord}%`
+                    },
+                }
+            }
+        }
+        // if(tglAwal === 0 || tglAkhir === 0) throw new Error("invalid keyword")
+        if(tglAwal !== "0" && tglAkhir !== "0"){
+            whereOption.createdAt = { 
+                [Op.gte] : new Date(tglAwal),
+                [Op.lte] : new Date(tglAkhir)
+            };
+        }
+        else if(tglAwal !== "0") {
+            whereOption.createdAt = { [Op.gte] : new Date(tglAwal)};
+        }
+        else if(tglAkhir !== "0") {
+            whereOption.createdAt = {[Op.lte] : new Date(tglAkhir)};
+        }
+
+        if(role !== "all"){
+            whereOption.role = {[Op.like] : role}
+        }
+
+
+        const {rows, count} = await User.findAndCountAll({
+            where: {
+                ...whereOption
+            },
+            limit : limit,
+            offset: limit * (page - 1)
+        })
+
+        const pageCount = Math.ceil(count / limit);
+
+        req.UKK_BACKEND.getUserList = {
+            data : rows,
+            count : count,
+            limit : limit,
+            pageCount : pageCount,
+            pageCurrent : page,
+        }
+        return next();
+    }catch(error){
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error,req) 
+    }
+}
+
 
 const updateUser = async ( req, res, next ) => {
     const data = {
@@ -127,6 +200,9 @@ const updateUser = async ( req, res, next ) => {
         password : req.body.password,
         role : req.body.role
     }
+
+    if(data.password === "") delete data.password;
+
     if(req.file)data.foto = req.file.filename; // ini foto yag belumd i format
     let oldFoto = getFilePath(req.UKK_BACKEND.getUserOne.data.foto); //ini sudah diformat dan akan di resolve
     try {
@@ -145,7 +221,7 @@ const updateUser = async ( req, res, next ) => {
 
 const deleteUser = async ( req, res, next) =>  {
     try {
-        await User.destroy({where : {id : req.params.id}});
+        await User.destroy({where : {id : req.params.user_id}});
         const fotoPath = getFilePath(req.UKK_BACKEND.getUserOne.data.foto)
         deleteFileIfExist(fotoPath);
         delete req.UKK_BACKEND.getUser
@@ -169,6 +245,7 @@ module.exports = {
     deleteUser,
     createUser, 
     getAllUser, 
+    getAllUserFiltered,
     getAllAdmin, 
     getAllResepsionis,
     getUser,

@@ -12,8 +12,9 @@ const createUserSchema = Joi.object({
 const updateUserSchema = Joi.object({
     username : Joi.string(),
     email: Joi.string().email(),
-    password : Joi.string().min(4),
-    role: Joi.string().valid("admin","resepsionis")
+    password : Joi.string().min(4).allow(null, ''),
+    role: Joi.string().valid("admin","resepsionis"),
+    foto: Joi.string().allow(null, '')
 })
 
 module.exports = {createUserSchema, updateUserSchema};

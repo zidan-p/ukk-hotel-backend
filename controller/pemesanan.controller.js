@@ -1,6 +1,6 @@
 // import library
 const fsn = require("date-fns");
-
+const { Op } = require("sequelize");
 
 const sequelize = require("./../database");
 const models = sequelize.models;
@@ -8,6 +8,7 @@ const Pemesanan = models.Pemesanan
 const DetailPemesanan = models.DetailPemesanan
 const Kamar = models.Kamar
 const User = models.User
+const TipeKamar = models.TipeKamar
 
 const {
     handleServerError,
@@ -97,6 +98,133 @@ const findPemesanan = async (req,res,next) => {
     }
 }
 
+const getPemesananByNomorPemesanan = async (req,res,next) => {
+    const data = {
+        nomorPemesanan : req.params.nomor_pemesanan
+    }
+    try {
+        const result = await Pemesanan.findOne({
+            where: data,
+            include: {
+                model: DetailPemesanan,
+                include : [{
+                    model : Kamar,
+                    as : "DaftarKamar"
+                }, {
+                    model : TipeKamar,
+                    as : "TipeKamarPemesanan"
+                }]
+            }
+        });
+        if (result === null) throw new Error("tidak dapat menemukan pemesanan");
+        req.UKK_BACKEND.getPemesananOne = {
+            data : result
+        }
+        return next();
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error,req) 
+    }
+}
+
+const getAllPemesaananFiltered = async (req,res,next) => {
+
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        //tanggal dibuat pesanan
+        const tglAwal = req.query.tgl_awal || "0";
+        const tglAkhir = req.query.tgl_akhir || "0";
+        const keyWord = req.query.keyword || "";
+        const status = req.query.status || "all";
+
+        let whereOption = {};
+        //cek apakah parameter valid
+        //paling pertama karena membutuhka where option pertama
+        if(keyWord !== "" && keyWord !== undefined && keyWord !== null){
+            whereOption = {
+                [Op.or] : {
+                    emailPemesan : {
+                        [Op.like] : `%${keyWord}%`
+                    },
+                    namaPemesan : {
+                        [Op.like] : `%${keyWord}%`
+                    },
+                    namaTamu : {
+                        [Op.like] : `%${keyWord}%`
+                    }
+                }
+            }
+        }
+        // if(tglAwal === 0 || tglAkhir === 0) throw new Error("invalid keyword")
+        if(tglAwal !== "0" && tglAkhir !== "0"){
+            whereOption.createdAt = { 
+                [Op.gte] : new Date(tglAwal),
+                [Op.lte] : new Date(tglAkhir)
+            };
+        }
+        else if(tglAwal !== "0") {
+            whereOption.createdAt = { [Op.gte] : new Date(tglAwal)};
+        }
+        else if(tglAkhir !== "0") {
+            whereOption.createdAt = {[Op.lte] : new Date(tglAkhir)};
+        }
+
+        if(status !== "all"){
+            whereOption.status = {[Op.like] : status}
+        }
+
+        
+
+
+        const {rows, count} = await Pemesanan.findAndCountAll({
+            where: {
+                ...whereOption
+            },
+            include:{
+                model: DetailPemesanan
+            },
+            limit : limit,
+            offset: limit * (page - 1)
+        })
+
+        const pageCount = Math.ceil(count / limit);
+
+        req.UKK_BACKEND.getPemesananList = {
+            data : rows,
+            count : count,
+            pageCount : pageCount,
+            pageCurrent : page
+        }
+        return next();
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error,req) 
+    }
+}
+
+const getAllPemesananOffset = (req,res,next) => {
+    try {
+        const page = req.query.page || 1;
+        const limit = req.query.limit || 10;
+
+        const {rows, count} = Pemesanan.findAndCountAll({
+            limit : limit,
+            offset: limit * (page - 1)  ,
+        })
+
+        req.UKK_BACKEND.getPemesananList = {
+            data : rows,
+            count : count
+        }
+        return next();
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error,req) 
+    }
+} 
+
 
 const getPemesanan = async (req,res,next) => {
     try {
@@ -117,11 +245,15 @@ const getPemesananFull = async (req,res,next) => {
         const result = await Pemesanan.findByPk(req.params.pemesanan_id,{
             include : {
                 model : DetailPemesanan,
-                include : {model : Kamar, as : "DaftarKamar"}
+                include : [
+                    {model : Kamar, as : "DaftarKamar"},
+                    {model: TipeKamar, as : "TipeKamarPemesanan"}
+
+                ]
             }
         });
         if (result === null)throw new Error("tidak dapat menemukan pemesanan");
-        req.UKK_BACKEND.getpemesananOne = {data : result}
+        req.UKK_BACKEND.getPemesananOne = {data : result}
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
@@ -161,7 +293,7 @@ const getAllPemesananFull = async (req,res,next) => {
 
 const updatePemesanan = async (req,res,next) => {
     const data = {
-        namaPemesan : req.body.dataPemesan,
+        namaPemesan : req.body.namaPemesan,
         emailPemesan : req.body.emailPemesan,
         tglPemesanan : req.body.tglPemesanan,
         tglCheckIn : req.body.tglCheckIn,
@@ -175,6 +307,23 @@ const updatePemesanan = async (req,res,next) => {
             data : result
         }
         return next()
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error,req) 
+    }
+}
+
+const updateStatus = async (req,res,next) => {
+    const status = req.body.status;
+    const id = req.params.pemesanan_id;
+    try {
+        const result = await Pemesanan.update({status : status},{
+            where : {id : id}
+        })
+        req.UKK_BACKEND.updatePemesanan = {
+            data : JSON.stringify(result)
+        }
+        return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
         else handleServerError(res,error,req) 
@@ -204,11 +353,15 @@ const deletePemesanan = async (req,res,next) => {
 module.exports = {
     createPemesananDirect,
     createPemesanan,
+    getPemesananByNomorPemesanan,
     getAllPemesanan,
     getAllPemesananFull,
     getPemesanan,
+    getAllPemesananOffset,
+    getAllPemesaananFiltered,
     getPemesananFull,
     updatePemesanan,
+    updateStatus,
     deletePemesanan,
     acceptPemesanan,
     findPemesanan
