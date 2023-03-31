@@ -183,19 +183,23 @@ const getKamarFiltered = async (req,res,next) => {
     
         if(tipeKamarId !== 0){
             whereOption.TipeKamarId = tipeKamarId;
-        }
+        } 
     
     
     
         const {rows, count} = await Kamar.findAndCountAll({
-            attributes : {
-                include : [
-                    [sequelize.fn("COUNT",sequelize.col("Pemesanan.id")), "totalPemesana"]
-                ]
-            }, 
-            group : ["kamar.id"],
             where : {...whereOption},
-            include : TipeKamar,
+            include : [
+                {
+                    model : TipeKamar,
+                    attributes : ["id", "namaTipeKamar"]
+                }, 
+                {
+                    model : DetailPemesanan,
+                    as : "DaftarDetailPemesanan",
+                    // attributes : [[sequelize.fn("COUNT", sequelize.col("KamarId")), "jumlahPemesanan"]]
+                }
+            ],
             distinct : true,
             limit : limit,
             offset : limit * (page - 1),
