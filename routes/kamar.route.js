@@ -16,6 +16,13 @@ const authController = require("./../controller/authorization.controller");
 // GET
 
 Route.get(
+    "/filtered",
+    kamarController.getKamarFiltered,
+    dataHandler.endHandler
+)
+
+
+Route.get(
     "/tipe-kamar/:tipe_kamar_id",
     getTipeKamar,
     kamarController.getKamarByTipeKamarId,
@@ -33,6 +40,8 @@ Route.get(
     kamarController.getAllkamar,
     dataHandler.endHandler
 )
+
+
 
 // POST
 

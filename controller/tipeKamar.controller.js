@@ -18,13 +18,14 @@ const {
 
 // ---------------- controller ---------------
 const createTipeKamar = async ( req, res, next ) =>{
-    // return console.log(req.body)
+    console.log(req.body);
     const data = {
-        namaTipeKamar : req.body.namaTipekamar,
+        namaTipeKamar : req.body.namaTipeKamar,
         harga : +req.body.harga,
         deskripsi : req.body.deskripsi,
     }
 
+    console.log(req.file);
     if(req.file){
         data.foto = req.file.filename
     }

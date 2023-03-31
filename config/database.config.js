@@ -6,7 +6,7 @@ const config = {
         host: 'localhost',
         dialect: 'mysql'
     },
-    logging : false, //log setiap query database ke konsole
+    logging : true, //log setiap query database ke konsole
 }
 
 module.exports = {config}

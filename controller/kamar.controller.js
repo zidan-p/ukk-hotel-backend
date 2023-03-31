@@ -9,7 +9,6 @@ const TipeKamar = models.TipeKamar
 const DetailPemesanan = models.DetailPemesanan
 const Pemesanan = models.Pemesanan
 
-
 const {
     handleServerError,
     handleSequelizeError
@@ -138,6 +137,99 @@ const getKamarByTipeKamarId = async (req,res,next)=> {
     }
 }
 
+const getKamarFiltered = async (req,res,next) => {
+
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+    
+        //untuk tipe kamar
+        const tipeKamarId = +req.query.tipe_kamar_id || 0;
+    
+        //tanggal dibuat user (created at)
+        const tglAwal = req.query.tgl_awal || "0";
+        const tglAkhir = req.query.tgl_akhir || "0";
+    
+        const keyWord = req.query.keyword || "";
+    
+        let whereOption = {};
+        //cek apakah parameter valid
+        //paling pertama karena membutuhka where option pertama
+        if(keyWord !== "" && keyWord !== undefined && keyWord !== null){
+            whereOption = {
+                [Op.or] : {
+                    namaTipeKamar : {
+                        [Op.like] : `%${keyWord}%`
+                    },
+                    deskripsi : {
+                        [Op.like] : `%${keyWord}%`
+                    },
+                }
+            }
+        }
+        // if(tglAwal === 0 || tglAkhir === 0) throw new Error("invalid keyword")
+        if(tglAwal !== "0" && tglAkhir !== "0"){
+            whereOption.createdAt = { 
+                [Op.gte] : new Date(tglAwal),
+                [Op.lte] : new Date(tglAkhir)
+            };
+        }
+        else if(tglAwal !== "0") {
+            whereOption.createdAt = { [Op.gte] : new Date(tglAwal)};
+        }
+        else if(tglAkhir !== "0") {
+            whereOption.createdAt = {[Op.lte] : new Date(tglAkhir)};
+        }
+    
+        if(tipeKamarId !== 0){
+            whereOption.TipeKamarId = tipeKamarId;
+        }
+    
+    
+    
+        const {rows, count} = await Kamar.findAndCountAll({
+            attributes : {
+                include : [
+                    [sequelize.fn("COUNT",sequelize.col("Pemesanan.id")), "totalPemesana"]
+                ]
+            }, 
+            group : ["kamar.id"],
+            where : {...whereOption},
+            include : TipeKamar,
+            distinct : true,
+            limit : limit,
+            offset : limit * (page - 1),
+        })
+    
+        const pageCount = Math.ceil(count / limit);
+    
+        req.UKK_BACKEND.getKamarLIst = {
+            data : rows,
+            count : count,
+            limit : limit,
+            pageCount : pageCount,
+            pageCurrent : page
+        }
+        return next();
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error,req) 
+    }
+}
+
+/**
+ * NOTE ::
+ * 
+ * ## 1 ##
+ * pada controller diatas, rencananya hasil dari query melalui sequelize akan juga langsung menghasilkan 
+ * jumlah pemesanan tiap-tiap kamar. tapi ternyata yang bisa saya dapat setelah berkeliling stackoverflow, saya
+ * hanya bisa mendapat cara mendapatkan count dari relasi 1 : m. jarang ada relasi n:m yang ada pada pertanyaan seputar sequelize.
+ * jadi untuk saat ini akan saya skip dahulu bagian ini.
+ * 
+ * untuk mengakalinya saya langusng menggunkana eager loading dalam setiap request. saya tidak terlalu memikirkan performanya 
+ * karena setiap query dari sequelize pasti akan di limit.
+ */
+
 
 const findKamarThatAvailableInCertainInterval = async (req,res,next) =>{
     const intervalDate = req.body.intervalDate;
@@ -158,7 +250,7 @@ const findKamarThatAvailableInCertainInterval = async (req,res,next) =>{
                     attributes : ["id", "tglCheckIn", "tglCheckOut"]
                 }
             }
-        })
+        }) 
 
         // jadi saya membiarkan node js yang menangani
         const result = rows.map(kamar => {
@@ -331,5 +423,6 @@ module.exports = {
     checkIfTipeKamarIsCorrespond,
     getKamarFull,
     findKamarThatAvailableInCertainInterval,
-    findKamarThatAvailableInCertainIntervalByTipeKamarId
+    findKamarThatAvailableInCertainIntervalByTipeKamarId,
+    getKamarFiltered
 }
