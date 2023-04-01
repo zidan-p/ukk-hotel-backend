@@ -140,92 +140,39 @@ const getKamarByTipeKamarId = async (req,res,next)=> {
 const getKamarFiltered = async (req,res,next) => {
 
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const page      = parseInt(req.query.page) || 1;
+        const limit     = parseInt(req.query.limit) || 10;
     
         //untuk tipe kamar
         const tipeKamarId = +req.query.tipe_kamar_id || 0;
     
         //tanggal dibuat user (created at)
-        const tglAwal = req.query.tgl_awal || "0";
-        const tglAkhir = req.query.tgl_akhir || "0";
-    
-        const keyWord = req.query.keyword || "";
-    
-        let whereOption = {};
-        //cek apakah parameter valid
-        //paling pertama karena membutuhka where option pertama
-        if(keyWord !== "" && keyWord !== undefined && keyWord !== null){
-            whereOption = {
-                [Op.or] : {
-                    namaTipeKamar : {
-                        [Op.like] : `%${keyWord}%`
-                    },
-                    deskripsi : {
-                        [Op.like] : `%${keyWord}%`
-                    },
-                }
-            }
-        }
-        // if(tglAwal === 0 || tglAkhir === 0) throw new Error("invalid keyword")
-        if(tglAwal !== "0" && tglAkhir !== "0"){
-            whereOption.createdAt = { 
-                [Op.gte] : new Date(tglAwal),
-                [Op.lte] : new Date(tglAkhir)
-            };
-        }
-        else if(tglAwal !== "0") {
-            whereOption.createdAt = { [Op.gte] : new Date(tglAwal)};
-        }
-        else if(tglAkhir !== "0") {
-            whereOption.createdAt = {[Op.lte] : new Date(tglAkhir)};
-        }
-    
-        if(tipeKamarId !== 0){
-            whereOption.TipeKamarId = tipeKamarId;
-        } 
-    
-    
-    
-        // const {rows, count} = await Kamar.findAndCountAll({
-        //     where : {...whereOption},
-        //     includeIgnoreAttributes: false,
-        //     group: ["kamar.id"],
-        //     attributes : {
-        //         include : [
-        //             [sequelize.fn("COUNT", sequelize.col("detail_pemesanan.id")), "jumlahPemesanan"]
-        //         ]
-        //     },
-        //     include : [
-        //         {
-        //             model : TipeKamar,
-        //             attributes : ["id", "namaTipeKamar"]
-        //         }, 
-        //         {
-        //             model : DetailPemesanan,
-        //             as : "DaftarDetailPemesanan",
-        //         }
-        //     ],
-        //     distinct : true,
-        //     limit : limit,
-        //     offset : limit * (page - 1),
-        // })
-    
-        // const pageCount = Math.ceil(count / limit);
-    
-        // req.UKK_BACKEND.getKamarLIst = {
-        //     data : rows,
-        //     count : count,
-        //     limit : limit,
-        //     pageCount : pageCount,
-        //     pageCurrent : page
-        // }
+        const tglAwal   = req.query.tgl_awal || "0";
+        const tglAkhir  = req.query.tgl_akhir || "0";
+        const keyWord   = req.query.keyword || "";
 
         let result = await sequelize.query(`
-            SELECT kamar.id, kamar.nama, COUNT("detail_pemesanan.id") as jumlahPemesanan FROM kamar 
+            SELECT 
+                kamar.*,
+                tipe_kamar.namaTipeKamar,
+                COUNT("detail_pemesanan.id") as jumlahPemesanan 
+            FROM kamar
+            JOIN tipe_kamar on tipe_kamar.id = kamar.TipeKamarId
             LEFT JOIN kamar_pemesanan_junction on kamar_pemesanan_junction.KamarId = kamar.id 
             LEFT JOIN detail_pemesanan on kamar_pemesanan_junction.DetailPemesananId = detail_pemesanan.id
-            GROUP BY kamar.id ORDER BY kamar.id DESC 
+            ${
+            (
+                (tglAwal !== "0")   || 
+                (tglAkhir !== "0")  || 
+                (tipeKamarId !== 0) ||  
+                (keyWord !== "" )
+            ) ? "WHERE" : ""
+            }
+                ${tglAwal !== "0" ? "createAt <  " + tglAwal : ""}
+                ${tglAkhir !== "0" ? "createAt > " + tglAkhir : ""}
+                ${tipeKamarId !== 0 ? "TipeKamarId = " + tipeKamarId : ""}
+                ${keyWord !== "" ? `((namaTipeKamar LIKE %${keyWord}%) OR (deskripsi LIKE %${keyWord}%) )` : ""}
+            GROUP BY kamar.id ORDER BY kamar.id ASC
         `,{type: sequelize.QueryTypes.SELECT});
 
         req.UKK_BACKEND.test = result;
