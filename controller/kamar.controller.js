@@ -187,33 +187,49 @@ const getKamarFiltered = async (req,res,next) => {
     
     
     
-        const {rows, count} = await Kamar.findAndCountAll({
-            where : {...whereOption},
-            include : [
-                {
-                    model : TipeKamar,
-                    attributes : ["id", "namaTipeKamar"]
-                }, 
-                {
-                    model : DetailPemesanan,
-                    as : "DaftarDetailPemesanan",
-                    // attributes : [[sequelize.fn("COUNT", sequelize.col("KamarId")), "jumlahPemesanan"]]
-                }
-            ],
-            distinct : true,
-            limit : limit,
-            offset : limit * (page - 1),
-        })
+        // const {rows, count} = await Kamar.findAndCountAll({
+        //     where : {...whereOption},
+        //     includeIgnoreAttributes: false,
+        //     group: ["kamar.id"],
+        //     attributes : {
+        //         include : [
+        //             [sequelize.fn("COUNT", sequelize.col("detail_pemesanan.id")), "jumlahPemesanan"]
+        //         ]
+        //     },
+        //     include : [
+        //         {
+        //             model : TipeKamar,
+        //             attributes : ["id", "namaTipeKamar"]
+        //         }, 
+        //         {
+        //             model : DetailPemesanan,
+        //             as : "DaftarDetailPemesanan",
+        //         }
+        //     ],
+        //     distinct : true,
+        //     limit : limit,
+        //     offset : limit * (page - 1),
+        // })
     
-        const pageCount = Math.ceil(count / limit);
+        // const pageCount = Math.ceil(count / limit);
     
-        req.UKK_BACKEND.getKamarLIst = {
-            data : rows,
-            count : count,
-            limit : limit,
-            pageCount : pageCount,
-            pageCurrent : page
-        }
+        // req.UKK_BACKEND.getKamarLIst = {
+        //     data : rows,
+        //     count : count,
+        //     limit : limit,
+        //     pageCount : pageCount,
+        //     pageCurrent : page
+        // }
+
+        let result = await sequelize.query(`
+            SELECT kamar.id, kamar.nama, COUNT("detail_pemesanan.id") as jumlahPemesanan FROM kamar 
+            LEFT JOIN kamar_pemesanan_junction on kamar_pemesanan_junction.KamarId = kamar.id 
+            LEFT JOIN detail_pemesanan on kamar_pemesanan_junction.DetailPemesananId = detail_pemesanan.id
+            GROUP BY kamar.id ORDER BY kamar.id DESC 
+        `,{type: sequelize.QueryTypes.SELECT});
+
+        req.UKK_BACKEND.test = result;
+
         return next();
     } catch (error) {
         if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
