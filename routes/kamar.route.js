@@ -86,6 +86,13 @@ Route.post(
     dataHandler.endHandler
 )
 
+Route.post(
+    "/create-bulk-many-with-tipe-kamar/:tipe_kamar_id",
+    authController.authRole(["admin","resepsionis"]),
+    getTipeKamar,
+    kamarController.createKamarManyBulk,
+    dataHandler.endHandler
+)
 
 //PUT
 Route.put(

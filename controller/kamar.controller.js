@@ -38,6 +38,7 @@ const createKamarMany = async (req, res, next) => {
     const TipeKamarId = req.params.tipe_kamar_id
     const count = +req.body.count
     
+    //pairing tipeKamarId with kamar
     const data = [];
     for(let i = 0; i < count; i++){
         data[i] = {
@@ -65,6 +66,27 @@ const createKamarBulk = async (req, res, next) => {
     const data = namaList.map(nama => {
         return {nama: nama, TipeKamarId}
     })
+    try {
+        const result = await Kamar.bulkCreate(data, {validate: true});
+        req.UKK_BACKEND.kamarList = {data : result,count : namaList.length}
+        return next();
+    } catch (error) {
+        if(error.name === 'SequelizeValidationError') handleSequelizeError(res,error);
+        else handleServerError(res,error,req)       
+    }
+}
+
+const createKamarManyBulk = async (req,res,next) => {
+    const namaList = req.body.namaList
+    const TipeKamarId = req.params.tipe_kamar_id
+    const data = [];
+    namaList.forEach(list => {
+        for(let i = 0; i < list.count; i++){
+            data.push({nama: list.nama ,TipeKamarId})
+        }
+    })
+    console.log(data);
+
     try {
         const result = await Kamar.bulkCreate(data, {validate: true});
         req.UKK_BACKEND.kamarList = {data : result,count : namaList.length}
@@ -151,11 +173,47 @@ const getKamarFiltered = async (req,res,next) => {
         const tglAkhir  = req.query.tgl_akhir || "0";
         const keyWord   = req.query.keyword || "";
 
-        let result = await sequelize.query(`
+        let whereOption = {};
+        if(keyWord !== "" && keyWord !== undefined && keyWord !== null){
+            whereOption = {
+                [Op.or] : {
+                    nama : {[Op.like] : `%${keyWord}%`},
+                }
+            }
+        }
+        if(tglAwal !== "0" && tglAkhir !== "0"){
+            whereOption.createdAt = { 
+                [Op.gte] : new Date(tglAwal),
+                [Op.lte] : new Date(tglAkhir)
+            };
+        }
+        else if(tglAwal !== "0") {
+            whereOption.createdAt = { [Op.gte] : new Date(tglAwal)};
+        }
+        else if(tglAkhir !== "0") {
+            whereOption.createdAt = {[Op.lte] : new Date(tglAkhir)};
+        }
+
+
+
+        //NOTE :
+        //filtering ini hanya bisa untuk keyword saja, dan masih error.
+        //antara raw query dengan model query sequelize terdapat perbedaan dalam melakukan query.
+        //bila menggunkana raw query saya tidak bisa mendapatkan jumlah row apabila limit dan offset di kecualikan.
+        //jadi saya mengakalinya dnegan melakukan query count dengan where option yg saya sediakan.
+        //namun, di query option saya tidak bisa melkukan include untuk model yg memiliki relasi dengan model kamar.
+
+        //jadilah begini...
+        //filtering ini hanya bisa berjalan bila keywordnya hanya untuk kamar. tidak dengan tipekamar ataupun pemesanan.
+
+
+        //TODO : mengubah target filtering ke nama kamar.
+
+        let results = await sequelize.query(`
             SELECT 
                 kamar.*,
                 tipe_kamar.namaTipeKamar,
-                COUNT("detail_pemesanan.id") as jumlahPemesanan 
+                COUNT(detail_pemesanan.id) as jumlahPemesanan 
             FROM kamar
             JOIN tipe_kamar on tipe_kamar.id = kamar.TipeKamarId
             LEFT JOIN kamar_pemesanan_junction on kamar_pemesanan_junction.KamarId = kamar.id 
@@ -171,11 +229,25 @@ const getKamarFiltered = async (req,res,next) => {
                 ${tglAwal !== "0" ? "createAt <  " + tglAwal : ""}
                 ${tglAkhir !== "0" ? "createAt > " + tglAkhir : ""}
                 ${tipeKamarId !== 0 ? "TipeKamarId = " + tipeKamarId : ""}
-                ${keyWord !== "" ? `((namaTipeKamar LIKE %${keyWord}%) OR (deskripsi LIKE %${keyWord}%) )` : ""}
-            GROUP BY kamar.id ORDER BY kamar.id ASC
-        `,{type: sequelize.QueryTypes.SELECT});
+                ${keyWord !== "" ? `kamar.nama LIKE "%${keyWord}%"` : ""}
+                
+            GROUP BY kamar.id ORDER BY kamar.id ASC LIMIT ${limit} OFFSET ${limit * (page - 1)}
+        `,{ type: sequelize.QueryTypes.SELECT });
 
-        req.UKK_BACKEND.test = result;
+        //${keyWord !== "" ? `(namaTipeKamar LIKE %${keyWord}%) OR (deskripsi LIKE %${keyWord}%) ` : ""}
+
+        let count = await Kamar.count({where : {
+            ...whereOption
+        }});
+
+        const pageCount = Math.ceil(count / limit);
+        req.UKK_BACKEND.getKamarList = {
+            data : results,
+            count : count,
+            pageCount : pageCount,
+            limit : limit,
+            pageCurrent : page,
+        };
 
         return next();
     } catch (error) {
@@ -382,6 +454,7 @@ module.exports = {
     createKamarMany,
     getAllkamar,
     getKamar,
+    createKamarManyBulk,
     getKamarByTipeKamarId,
     findSomeKamarByIdList,
     updateKamar,
