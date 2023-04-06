@@ -127,7 +127,13 @@ const getKamar = async (req,res,next)=>{
 const getKamarFull = async (req,res,next)=>{
     try {
         const result = await Kamar.findByPk(req.params.kamar_id,{
-            include : TipeKamar
+            include : [
+                TipeKamar,
+                {
+                    model : DetailPemesanan,
+                    as : "DaftarDetailPemesanan"
+                }
+            ]
         });
         if(result === null) throw new Error("kamar tidak ditemukan");
         req.UKK_BACKEND.getKamarOne = {
@@ -419,6 +425,8 @@ const checkIfTipeKamarIsCorrespond = async (req,res,next) => {
         else handleServerError(res,error,req) 
     }
 }
+
+
 
 const updateKamar = async (req, res, next) => {
     const data = {nama : req.body.nama}

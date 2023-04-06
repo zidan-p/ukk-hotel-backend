@@ -23,7 +23,7 @@ async function deleteFileIfExist(filepath){
 }
 
 function getFilePath(pathString){
-    return path.resolve("storage", "images", pathString)
+    return path.resolve("storage", "images", (pathString || "undefined")) // bila file yang dikirim adalah null
 }
 
 module.exports = {

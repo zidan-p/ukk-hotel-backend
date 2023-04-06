@@ -94,7 +94,10 @@ const getTipeKamarFiltered = async (req,res,next) => {
         const tglAwal = req.query.tgl_awal || "0";
         const tglAkhir = req.query.tgl_akhir || "0";
 
-        const keyWord = req.query.keyword || ""
+        //order by
+        const orderBy = req.query.order_by || "";
+
+        const keyWord = req.query.keyword || "";
 
         let whereOption = {};
         //cek apakah parameter valid
@@ -123,6 +126,17 @@ const getTipeKamarFiltered = async (req,res,next) => {
         }
         else if(tglAkhir !== "0") {
             whereOption.createdAt = {[Op.lte] : new Date(tglAkhir)};
+        }
+
+        //orderding
+        let ordering = [];
+        switch (orderBy) {
+            case "banyak_kamar":
+                ordering.push([sequelize.fn("COUNT", sequelize.col("kamar.id")), "ASC"])
+                break;
+            default:
+                ordering.push(["id", "ASC"]);
+                break;
         }
 
 

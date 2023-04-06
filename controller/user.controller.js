@@ -121,6 +121,8 @@ const getUserByUsername = async ( req, res, next ) => {
     }
 }
 
+
+
 const getAllUserFiltered = async (req,res,next) => {
     try{
         const page = parseInt(req.query.page) || 1;
@@ -178,8 +180,12 @@ const getAllUserFiltered = async (req,res,next) => {
 
         const pageCount = Math.ceil(count / limit);
 
+        const adminAmount = await User.count({where : {role : "admin"}})
+        const resepsionisAmount = await User.count({where : {role : "resepsionis"}})        
+
         req.UKK_BACKEND.getUserList = {
             data : rows,
+            roleAmount : {adminAmount,resepsionisAmount},
             count : count,
             limit : limit,
             pageCount : pageCount,
